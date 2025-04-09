@@ -1,0 +1,17 @@
+[package]
+name = "super-crawler"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11", features = ["default"] }
+scraper = "0.13"
+url = "2.2"
+pdf-extract = "0.6"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+log = "0.4"
+env_logger = "0.9"
+tempfile = "3.19.1"
