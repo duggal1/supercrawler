@@ -16,6 +16,7 @@ use log::{info, error};
 use futures::future::join_all;
 use std::time::{Duration, Instant};
 use actix_cors::Cors;
+use anyhow;
 
 #[derive(Serialize, Deserialize)]
 struct CrawlRequest {
@@ -245,7 +246,7 @@ async fn process_url(
     domain: &str,
     tx: &mpsc::Sender<(String, usize, usize, String)>,
     logs: &Arc<tokio::sync::Mutex<Vec<String>>>,
-) {
+) -> bool {
     let permit = semaphore.acquire().await.unwrap();
     info!("Fetching URL: {}", url);
     logs.lock().await.push(format!("Fetching URL: {}", url));
@@ -256,7 +257,7 @@ async fn process_url(
             error!("Failed to fetch URL {}: {}", url, e);
             logs.lock().await.push(format!("Failed to fetch URL {}: {}", url, e));
             drop(permit);
-            return;
+            return false;
         }
     };
 
@@ -272,11 +273,13 @@ async fn process_url(
         None
     };
 
+    let mut success = false;
     if let Some(content) = content {
         let mdx = clean_to_mdx(&content);
         save_mdx(url, &mdx);
         info!("Successfully processed and saved MDX for URL: {}", url);
         logs.lock().await.push(format!("Successfully processed and saved MDX for URL: {}", url));
+        success = true;
     }
 
     drop(permit);
@@ -290,6 +293,8 @@ async fn process_url(
             }
         }
     }
+    
+    success
 }
 
 /// Handles the crawl request, initiating the crawling process.
@@ -305,39 +310,99 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
     let batch_size = 10;
     let mut mdx_files = Vec::new();
     let logs = state.logs.clone();
-
-    for chunk in domains.chunks(batch_size) {
-        let mut futures = Vec::new();
-        for domain in chunk {
-            let tx = state.tx.clone();
-            let domain_clone = domain.clone();
-            futures.push(async move {
-                tx.send((domain_clone.clone(), 0, max_depth, domain_clone.clone()))
-                    .await
-                    .map_err(|e| error!("Failed to send URL {}: {}", domain_clone, e))
-            });
-        }
-        join_all(futures).await;
-
-        tokio::time::sleep(Duration::from_secs(4)).await;
-        tokio::time::sleep(Duration::from_secs(1)).await;
-        let lock = logs.lock().await;
-        if lock.iter().any(|log| log.contains("Successfully processed")) {
-            for domain in chunk {
-                let filename = url_to_filename(domain);
-                if let Ok(content) = fs::read_to_string(&filename) {
-                    mdx_files.push((domain.to_string(), content));
-                }
+    
+    // Tracking structure for processing domains
+    let (complete_tx, mut complete_rx) = mpsc::channel::<(String, bool)>(domains.len() * 10);
+    
+    // Create a task to process each domain
+    let mut total_spawned = 0;
+    
+    for domain in domains.iter() {
+        let tx = state.tx.clone();
+        let domain_clone = domain.clone();
+        let complete_tx = complete_tx.clone();
+        let client = state.client.clone();
+        let semaphore = state.semaphore.clone();
+        let logs_clone = logs.clone();
+        
+        total_spawned += 1;
+        tokio::spawn(async move {
+            // Queue the initial URL
+            if let Err(e) = tx.send((domain_clone.clone(), 0, max_depth, domain_clone.clone())).await {
+                error!("Failed to send initial URL {}: {}", domain_clone, e);
+                let _ = complete_tx.send((domain_clone, false)).await;
+                return;
             }
+            
+            // Wait to ensure processing starts
+            tokio::time::sleep(Duration::from_millis(100)).await;
+            
+            // Check if the URL was successfully processed
+            let success = process_url(
+                &client, 
+                &semaphore, 
+                &domain_clone, 
+                0, 
+                max_depth, 
+                &domain_clone, 
+                &tx, 
+                &logs_clone
+            ).await;
+            
+            // Signal completion
+            let _ = complete_tx.send((domain_clone, success)).await;
+        });
+    }
+    
+    // Drop sender so channel closes when all tasks complete
+    drop(complete_tx);
+    
+    // Process domain completion reports
+    let mut processed_count = 0;
+    let mut successful_count = 0;
+    
+    while let Some((domain, success)) = complete_rx.recv().await {
+        processed_count += 1;
+        if success {
+            successful_count += 1;
+            
+            // Check for MDX file
+            let filename = url_to_filename(&domain);
+            if let Ok(content) = fs::read_to_string(&filename) {
+                mdx_files.push((domain.clone(), content));
+            }
+        }
+        
+        // Log progress
+        let elapsed = start_time.elapsed();
+        let log_msg = format!(
+            "Progress: {}/{} domains processed ({} successful) in {:.2} seconds", 
+            processed_count, 
+            total_spawned,
+            successful_count,
+            elapsed.as_secs_f64()
+        );
+        info!("{}", log_msg);
+        logs.lock().await.push(log_msg);
+        
+        // If all domains are processed, we're done
+        if processed_count >= total_spawned {
+            break;
         }
     }
 
-    let elapsed = start_time.elapsed().as_secs();
-    info!("Processed {} domains in {} seconds", domains.len(), elapsed);
+    let elapsed = start_time.elapsed();
+    let final_message = format!(
+        "Completed crawling {} domains ({} successful) in {:.2} seconds", 
+        domains.len(), 
+        successful_count,
+        elapsed.as_secs_f64()
+    );
+    info!("{}", final_message);
 
     let response_logs = logs.lock().await.clone();
     HttpResponse::Ok().json(CrawlResponse {
-        message: format!("Completed crawling {} domains in {} seconds", domains.len(), elapsed),
+        message: final_message,
         logs: response_logs,
         mdx_files,
     })
@@ -379,19 +444,49 @@ async fn main() -> std::io::Result<()> {
 
     tokio::spawn(async move {
         let mut visited = HashSet::with_capacity(1_000_000);
+        let mut active_tasks = 0;
+        let (task_tx, mut task_rx) = mpsc::channel::<()>(10_000);
+        
         info!("Background crawler task started");
-        while let Some((url, current_depth, max_depth, domain)) = rx.recv().await {
-            if visited.contains(&url) {
-                continue;
+        
+        loop {
+            tokio::select! {
+                // Process new URLs
+                Some((url, current_depth, max_depth, domain)) = rx.recv() => {
+                    if visited.contains(&url) {
+                        continue;
+                    }
+                    visited.insert(url.clone());
+                    
+                    let client = client_clone.clone();
+                    let semaphore = semaphore_clone.clone();
+                    let tx = tx_clone.clone();
+                    let logs = logs_clone.clone();
+                    let task_tx = task_tx.clone();
+                    
+                    active_tasks += 1;
+                    info!("Active crawler tasks: {}", active_tasks);
+                    
+                    tokio::spawn(async move {
+                        let _ = process_url(&client, &semaphore, &url, current_depth, max_depth, &domain, &tx, &logs).await;
+                        let _ = task_tx.send(()).await;
+                    });
+                }
+                
+                // Track completed tasks
+                Some(_) = task_rx.recv() => {
+                    active_tasks -= 1;
+                    info!("Task completed. Active crawler tasks: {}", active_tasks);
+                }
+                
+                // Exit if channel is closed and no active tasks
+                else => {
+                    if active_tasks == 0 {
+                        info!("Background crawler task completed - all URLs processed");
+                        break;
+                    }
+                }
             }
-            visited.insert(url.clone());
-            let client = client_clone.clone();
-            let semaphore = semaphore_clone.clone();
-            let tx = tx_clone.clone();
-            let logs = logs_clone.clone();
-            tokio::spawn(async move {
-                process_url(&client, &semaphore, &url, current_depth, max_depth, &domain, &tx, &logs).await;
-            });
         }
     });
 
