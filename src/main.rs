@@ -13,10 +13,8 @@ use std::io::Write;
 use std::path::Path;
 use tempfile::NamedTempFile;
 use log::{info, error};
-use futures::future::join_all;
 use std::time::{Duration, Instant};
 use actix_cors::Cors;
-use anyhow;
 
 #[derive(Serialize, Deserialize)]
 struct CrawlRequest {
@@ -64,6 +62,14 @@ fn element_to_markdown(element: ElementRef) -> String {
                         let inner = element_to_markdown(child_ref);
                         markdown.push_str(&format!("`{}`", inner));
                     }
+                    "span" => {
+                        // Preserve spans as they may contain important text
+                        markdown.push_str(&element_to_markdown(child_ref));
+                    }
+                    "br" => {
+                        // Add proper line break for <br> tags
+                        markdown.push_str("\n");
+                    }
                     _ => {
                         markdown.push_str(&element_to_markdown(child_ref));
                     }
@@ -100,8 +106,47 @@ fn process_element(element: ElementRef) -> String {
         }
         "pre" => {
             if let Some(code) = element.select(&Selector::parse("code").unwrap()).next() {
-                let code_text = code.text().collect::<Vec<_>>().join("\n").trim().to_string();
-                if code_text.is_empty() { String::new() } else { format!("```\n{}\n```\n\n", code_text) }
+                // Extract language class if available
+                let class_attr = code.value().attr("class").unwrap_or("");
+                let language = if class_attr.contains("language-") {
+                    let re = Regex::new(r"language-(\w+)").unwrap();
+                    if let Some(caps) = re.captures(class_attr) {
+                        caps.get(1).map_or("", |m| m.as_str())
+                    } else {
+                        ""
+                    }
+                } else if class_attr.contains("jsx") || class_attr.contains("javascript") {
+                    "jsx"
+                } else if class_attr.contains("typescript") || class_attr.contains("ts") {
+                    "tsx"
+                } else if class_attr.contains("bash") || class_attr.contains("shell") || class_attr.contains("sh") {
+                    "bash"
+                } else {
+                    ""
+                };
+                
+                // Clean up the code text - remove excessive whitespace and normalize line breaks
+                let code_text = code.text().collect::<Vec<_>>().join("\n")
+                    .lines()
+                    .map(|line| line.trim_end())
+                    .collect::<Vec<_>>()
+                    .join("\n")
+                    .trim()
+                    .to_string();
+                
+                if code_text.is_empty() { 
+                    String::new() 
+                } else { 
+                    // For Next.js and React code, default to jsx if no language specified
+                    let lang_hint = if language.is_empty() && 
+                       (code_text.contains("import") && (code_text.contains("react") || code_text.contains("next"))) {
+                        "jsx"
+                    } else {
+                        language
+                    };
+                    
+                    format!("```{}\n{}\n```\n\n", lang_hint, code_text) 
+                }
             } else {
                 String::new()
             }
@@ -114,7 +159,85 @@ fn process_element(element: ElementRef) -> String {
                 String::new()
             }
         }
-        "nav" | "footer" | "aside" | "script" | "style" => {
+        "a" => {
+            if let Some(href) = element.value().attr("href") {
+                let text = element_to_markdown(element);
+                if text.is_empty() {
+                    String::new()
+                } else {
+                    format!("[{}]({})\n\n", text, href)
+                }
+            } else {
+                String::new()
+            }
+        }
+        "blockquote" => {
+            let content = element.children()
+                .filter_map(ElementRef::wrap)
+                .map(|e| process_element(e))
+                .collect::<Vec<_>>()
+                .join("");
+
+            if content.is_empty() {
+                String::new()
+            } else {
+                // Add proper blockquote formatting by prefixing each line with >
+                let quoted = content.lines()
+                    .map(|line| if line.is_empty() { ">".to_string() } else { format!("> {}", line) })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                format!("{}\n\n", quoted)
+            }
+        }
+        "table" => {
+            let mut table_mdx = String::new();
+            let mut headers = Vec::new();
+            let mut rows = Vec::new();
+            
+            // Extract headers
+            if let Some(thead) = element.select(&Selector::parse("thead tr").unwrap()).next() {
+                for th in thead.select(&Selector::parse("th").unwrap()) {
+                    headers.push(element_to_markdown(th));
+                }
+            }
+            
+            // Extract rows
+            for tr in element.select(&Selector::parse("tbody tr").unwrap()) {
+                let mut row = Vec::new();
+                for td in tr.select(&Selector::parse("td").unwrap()) {
+                    row.push(element_to_markdown(td));
+                }
+                rows.push(row);
+            }
+            
+            // Build table
+            if !headers.is_empty() {
+                // Header row
+                table_mdx.push_str(&format!("| {} |\n", headers.join(" | ")));
+                
+                // Separator row
+                table_mdx.push_str(&format!("| {} |\n", headers.iter().map(|_| "---").collect::<Vec<_>>().join(" | ")));
+                
+                // Data rows
+                for row in rows {
+                    table_mdx.push_str(&format!("| {} |\n", row.join(" | ")));
+                }
+                
+                table_mdx.push_str("\n");
+            }
+            
+            table_mdx
+        }
+        "div" | "section" | "article" | "main" => {
+            let mut mdx = String::new();
+            for child in element.children() {
+                if let Some(child_elem) = ElementRef::wrap(child) {
+                    mdx.push_str(&process_element(child_elem));
+                }
+            }
+            mdx
+        }
+        "nav" | "footer" | "aside" | "script" | "style" | "noscript" | "iframe" | "form" => {
             String::new() // Ignore these elements
         }
         _ => {
@@ -142,24 +265,80 @@ fn clean_to_mdx(content: &str) -> String {
         .next()
         .map(|t| t.text().collect::<Vec<_>>().join(" "))
         .unwrap_or("Untitled".to_string());
+    
     let description = doc.select(&Selector::parse("meta[name='description']").unwrap())
         .next()
         .and_then(|m| m.value().attr("content"))
         .unwrap_or("No description");
+    
     let keywords = doc.select(&Selector::parse("meta[name='keywords']").unwrap())
         .next()
         .and_then(|m| m.value().attr("content"))
         .unwrap_or("No keywords");
-    mdx.push_str(&format!(
-        "---\ntitle: {}\ndescription: {}\nkeywords: {}\n---\n\n",
-        title, description, keywords
-    ));
+    
+    // Extract additional metadata for enriched context
+    let author = doc.select(&Selector::parse("meta[name='author']").unwrap())
+        .next()
+        .and_then(|m| m.value().attr("content"))
+        .unwrap_or("");
+    
+    let published_date = doc.select(&Selector::parse("meta[property='article:published_time']").unwrap())
+        .next()
+        .and_then(|m| m.value().attr("content"))
+        .unwrap_or("");
+    
+    // Build frontmatter with richer metadata
+    mdx.push_str("---\n");
+    mdx.push_str(&format!("title: {}\n", title));
+    mdx.push_str(&format!("description: {}\n", description));
+    mdx.push_str(&format!("keywords: {}\n", keywords));
+    
+    if !author.is_empty() {
+        mdx.push_str(&format!("author: {}\n", author));
+    }
+    
+    if !published_date.is_empty() {
+        mdx.push_str(&format!("date: {}\n", published_date));
+    }
+    
+    // Add source URL as reference
+    if let Some(canonical) = doc.select(&Selector::parse("link[rel='canonical']").unwrap())
+        .next()
+        .and_then(|m| m.value().attr("href")) {
+        mdx.push_str(&format!("canonicalUrl: {}\n", canonical));
+    }
+    
+    mdx.push_str("---\n\n");
+
+    // Add table of contents placeholder for long articles
+    if doc.select(&Selector::parse("h2, h3, h4, h5, h6").unwrap()).count() > 3 {
+        mdx.push_str("## Table of Contents\n\n");
+        mdx.push_str("{/* Auto-generated table of contents */}\n\n");
+    }
 
     // Process body content
     if let Some(body) = doc.select(&Selector::parse("body").unwrap()).next() {
-        for child in body.children() {
+        let main_content = doc.select(&Selector::parse("main, article, .content, #content, .post, .article").unwrap())
+            .next()
+            .unwrap_or(body);
+            
+        for child in main_content.children() {
             if let Some(element) = ElementRef::wrap(child) {
                 mdx.push_str(&process_element(element));
+            }
+        }
+    }
+
+    // Add a section for related links if they exist
+    let related_links: Vec<_> = doc.select(&Selector::parse("a[rel='related'], .related a, .see-also a").unwrap()).collect();
+    if !related_links.is_empty() {
+        mdx.push_str("\n## Related Resources\n\n");
+        for link in related_links {
+            if let Some(href) = link.value().attr("href") {
+                let text = link.text().collect::<Vec<_>>().join(" ").trim().to_string();
+                if !text.is_empty() {
+                    mdx.push_str(&format!("- [{}]({})\n", text, href));
+                }
             }
         }
     }
@@ -188,6 +367,8 @@ fn save_mdx(url: &str, mdx: &str) {
     if let Ok(mut file) = File::create(&filename) {
         if let Err(e) = file.write_all(mdx.as_bytes()) {
             error!("Failed to write MDX to {}: {}", filename, e);
+        } else {
+            info!("Successfully saved MDX file: {}", filename);
         }
     }
 }
@@ -248,8 +429,7 @@ async fn process_url(
     logs: &Arc<tokio::sync::Mutex<Vec<String>>>,
 ) -> bool {
     let permit = semaphore.acquire().await.unwrap();
-    info!("Fetching URL: {}", url);
-    logs.lock().await.push(format!("Fetching URL: {}", url));
+    info!("Fetching URL: {} (depth: {}/{})", url, current_depth, max_depth);
 
     let resp = match client.get(url).send().await {
         Ok(resp) => resp,
@@ -277,14 +457,17 @@ async fn process_url(
     if let Some(content) = content {
         let mdx = clean_to_mdx(&content);
         save_mdx(url, &mdx);
-        info!("Successfully processed and saved MDX for URL: {}", url);
-        logs.lock().await.push(format!("Successfully processed and saved MDX for URL: {}", url));
+        info!("Successfully processed URL: {}", url);
         success = true;
     }
 
     drop(permit);
     if current_depth < max_depth {
         let urls = fetch_and_extract_urls(client, url).await;
+        if urls.len() > 10 {
+            logs.lock().await.push(format!("Found {} URLs at {} (depth: {}/{})", urls.len(), url, current_depth, max_depth));
+        }
+        
         for next_url in urls {
             if let Ok(parsed) = Url::parse(&next_url) {
                 if parsed.domain() == Url::parse(domain).unwrap().domain() {
@@ -305,14 +488,15 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
         .collect::<Vec<_>>();
     let max_depth = req.max_depth.unwrap_or(5).min(5);
     info!("Received crawl request for {} domains with max_depth: {}", domains.len(), max_depth);
+    state.logs.lock().await.push(format!("Received crawl request for {} domains with max_depth: {}", domains.len(), max_depth));
 
     let start_time = Instant::now();
-    let batch_size = 10;
     let mut mdx_files = Vec::new();
     let logs = state.logs.clone();
     
     // Tracking structure for processing domains
-    let (complete_tx, mut complete_rx) = mpsc::channel::<(String, bool)>(domains.len() * 10);
+    let (complete_tx, mut complete_rx) = mpsc::channel::<(String, bool)>(domains.len() * 100);
+    let (progress_tx, mut progress_rx) = mpsc::channel::<(usize, usize, usize)>(1000);
     
     // Create a task to process each domain
     let mut total_spawned = 0;
@@ -324,6 +508,7 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
         let client = state.client.clone();
         let semaphore = state.semaphore.clone();
         let logs_clone = logs.clone();
+        let _progress_tx = progress_tx.clone();
         
         total_spawned += 1;
         tokio::spawn(async move {
@@ -354,8 +539,36 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
         });
     }
     
+    // Real-time status monitoring task
+    let logs_for_monitor = logs.clone();
+    tokio::spawn(async move {
+        let mut current_depth_counts = vec![0; max_depth as usize + 1];
+        let mut current_depth_processed = vec![0; max_depth as usize + 1];
+        
+        while let Some((depth, total, processed)) = progress_rx.recv().await {
+            if depth <= max_depth as usize {
+                current_depth_counts[depth] = total;
+                current_depth_processed[depth] = processed;
+                
+                let progress_msg = format!(
+                    "Progress: [Depth 0: {}/{}, Depth 1: {}/{}, Depth 2: {}/{}, Depth 3: {}/{}, Depth 4: {}/{}, Depth 5: {}/{}] - {:?}s elapsed",
+                    current_depth_processed[0], current_depth_counts[0],
+                    current_depth_processed.get(1).unwrap_or(&0), current_depth_counts.get(1).unwrap_or(&0),
+                    current_depth_processed.get(2).unwrap_or(&0), current_depth_counts.get(2).unwrap_or(&0),
+                    current_depth_processed.get(3).unwrap_or(&0), current_depth_counts.get(3).unwrap_or(&0),
+                    current_depth_processed.get(4).unwrap_or(&0), current_depth_counts.get(4).unwrap_or(&0),
+                    current_depth_processed.get(5).unwrap_or(&0), current_depth_counts.get(5).unwrap_or(&0),
+                    start_time.elapsed().as_secs()
+                );
+                info!("{}", progress_msg);
+                logs_for_monitor.lock().await.push(progress_msg);
+            }
+        }
+    });
+    
     // Drop sender so channel closes when all tasks complete
     drop(complete_tx);
+    drop(progress_tx);
     
     // Process domain completion reports
     let mut processed_count = 0;
@@ -399,6 +612,7 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
         elapsed.as_secs_f64()
     );
     info!("{}", final_message);
+    logs.lock().await.push(final_message.clone());
 
     let response_logs = logs.lock().await.clone();
     HttpResponse::Ok().json(CrawlResponse {
@@ -446,6 +660,15 @@ async fn main() -> std::io::Result<()> {
         let mut visited = HashSet::with_capacity(1_000_000);
         let mut active_tasks = 0;
         let (task_tx, mut task_rx) = mpsc::channel::<()>(10_000);
+        let (progress_tx, _) = mpsc::channel::<(usize, usize, usize)>(1000);
+        
+        // Track URLs by depth for progress reporting - use Arc to share between tasks
+        let depth_counts = Arc::new(tokio::sync::Mutex::new(vec![0; 6])); // Track counts for depths 0-5
+        let depth_processed = Arc::new(tokio::sync::Mutex::new(vec![0; 6])); // Track processed for depths 0-5
+        
+        // Batch logging - update less frequently
+        let mut last_log_time = Instant::now();
+        let log_interval = Duration::from_secs(5); // Only log every 5 seconds
         
         info!("Background crawler task started");
         
@@ -458,17 +681,61 @@ async fn main() -> std::io::Result<()> {
                     }
                     visited.insert(url.clone());
                     
+                    // Update depth tracking
+                    if current_depth <= 5 {
+                        let mut counts = depth_counts.lock().await;
+                        counts[current_depth] += 1;
+                        
+                        // Only send progress updates periodically to reduce overhead
+                        let now = Instant::now();
+                        if now.duration_since(last_log_time) >= log_interval {
+                            last_log_time = now;
+                            let current_processed = depth_processed.lock().await[current_depth];
+                            let _ = progress_tx.send((
+                                current_depth, 
+                                counts[current_depth], 
+                                current_processed
+                            )).await;
+                        }
+                    }
+                    
                     let client = client_clone.clone();
                     let semaphore = semaphore_clone.clone();
                     let tx = tx_clone.clone();
                     let logs = logs_clone.clone();
                     let task_tx = task_tx.clone();
+                    let progress_tx = progress_tx.clone();
+                    let current_depth_copy = current_depth;
+                    let depth_counts_clone = depth_counts.clone();
+                    let depth_processed_clone = depth_processed.clone();
                     
                     active_tasks += 1;
-                    info!("Active crawler tasks: {}", active_tasks);
+                    // Only log active tasks periodically
+                    if active_tasks % 100 == 0 {
+                        info!("Active crawler tasks: {} (depth {})", active_tasks, current_depth);
+                    }
                     
                     tokio::spawn(async move {
-                        let _ = process_url(&client, &semaphore, &url, current_depth, max_depth, &domain, &tx, &logs).await;
+                        let _success = process_url(&client, &semaphore, &url, current_depth, max_depth, &domain, &tx, &logs).await;
+                        
+                        // Update progress for this depth - minimize locking
+                        if current_depth_copy <= 5 {
+                            let mut processed = depth_processed_clone.lock().await;
+                            if current_depth_copy < processed.len() {
+                                processed[current_depth_copy] += 1;
+                                
+                                // Only send updates on significant milestones (every 10th URL)
+                                if processed[current_depth_copy] % 10 == 0 {
+                                    let counts = depth_counts_clone.lock().await;
+                                    let _ = progress_tx.try_send((
+                                        current_depth_copy, 
+                                        counts[current_depth_copy], 
+                                        processed[current_depth_copy]
+                                    ));
+                                }
+                            }
+                        }
+                        
                         let _ = task_tx.send(()).await;
                     });
                 }
@@ -476,7 +743,10 @@ async fn main() -> std::io::Result<()> {
                 // Track completed tasks
                 Some(_) = task_rx.recv() => {
                     active_tasks -= 1;
-                    info!("Task completed. Active crawler tasks: {}", active_tasks);
+                    // Only log significant changes in active tasks
+                    if active_tasks % 100 == 0 {
+                        info!("Task completed. Active crawler tasks: {}", active_tasks);
+                    }
                 }
                 
                 // Exit if channel is closed and no active tasks
