@@ -1,0 +1,773 @@
+---
+title: Next.js OpenAI Doc Search Starter
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/next.js/nextjs-openai-doc-search-starter
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[supabase-community/nextjs-openai-doc-search](https://github.com/supabase-community/nextjs-openai-doc-search/)
+
+# Next.js OpenAI Doc Search Starter
+
+Template for building your own custom ChatGPT  doc search powered by Next.js, OpenAI, and Supabase.
+
+[Deploy](/new/clone?demo-deion=Template%20for%20building%20your%20own%20custom%20ChatGPT%20%20doc%20search%20powered%20by%20Next.js%2C%20OpenAI%2C%20and%20Supabase.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F1OntM6THNEUvlUsYy6Bjmf%2F475e39dbc84779538c8ed47c63a37e0e%2Fnextjs_openai_doc_search_og.png&demo-title=Next.js%20OpenAI%20Doc%20Search%20Starter&demo-url=https%3A%2F%2Fsupabase.com%2Fdocs&env=OPENAI_KEY&envDeion=Get%20your%20OpenAI%20API%20key%3A&envLink=https%3A%2F%2Fplatform.openai.com%2Faccount%2Fapi-keys&external-id=https%3A%2F%2Fgithub.com%2Fsupabase-community%2Fnextjs-openai-doc-search%2Ftree%2Fmain&from=github&project-name=Next.js%20OpenAI%20Doc%20Search%20Starter&repository-name=nextjs-openai-doc-search-starter&repository-url=https%3A%2F%2Fgithub.com%2Fsupabase-community%2Fnextjs-openai-doc-search%2F&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%7D%5D&teamCreateStatus=hidden)
+
+[View Demo](https://supabase.com/docs)
+
+[Next.js](/templates/next.js)
+
+[AI](/templates/ai)
+
+[Tailwind](/templates/tailwind)
+
+[Supabase](/templates/supabase)
+
+![OpenAI Doc Search Starter](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F1OntM6THNEUvlUsYy6Bjmf%2F475e39dbc84779538c8ed47c63a37e0e%2Fnextjs_openai_doc_search_og.png&w=3840&q=75)
+
+## Next.js OpenAI Doc Search Starter
+
+This starter takes all the`.mdx`files in the`pages`directory and processes them to use as custom context within[OpenAI Text Completion](https://platform.openai.com/docs/guides/completion)prompts.
+
+### Deploy
+
+Deploy this starter to Vercel. The Supabase integration will automatically set the required environment variables and configure your[Database Schema](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./supabase/migrations/20230406025118_init.sql). All you have to do is set your`OPENAI_KEY`and you're ready to go!
+
+[
+
+### Technical Details
+
+Building your own custom ChatGPT involves four steps:
+
+1. [👷 Build time]Pre-process the knowledge base (your`.mdx`files in your`pages`folder).
+1. [👷 Build time]Store embeddings in Postgres with[pgvector](https://supabase.com/docs/guides/database/extensions/pgvector).
+1. [🏃 Runtime]Perform vector similarity search to find the content that's relevant to the question.
+1. [🏃 Runtime]Inject content into OpenAI GPT-3 text completion prompt and stream response to the client.
+
+### 👷 Build time
+
+Step 1. and 2. happen at build time, e.g. when Vercel builds your Next.js app. During this time the[generate-embeddings](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./lib/generate-embeddings.ts)is being executed which performs the following tasks:
+
+```
+sequenceDiagram
+    participant
+Vercel
+    participant
+DB
+
+(
+pgvector
+)
+    participant
+OpenAI
+
+(
+API
+)
+    loop
+1.
+
+Pre
+-
+process the knowledge base
+
+Vercel
+-
+>>
+Vercel
+:
+
+Chunk
+
+.
+mdx
+ pages into sections
+        loop
+2.
+
+Create
+
+&
+ store embeddings
+
+Vercel
+-
+>>
+OpenAI
+
+(
+API
+)
+:
+ create embedding
+for
+ page section
+
+OpenAI
+
+(
+API
+)
+-
+>>
+Vercel
+:
+ embedding
+vector
+(
+1536
+)
+
+Vercel
+-
+>>
+DB
+
+(
+pgvector
+)
+:
+ store embedding
+for
+ page section
+        end
+    end
+```
+
+In addition to storing the embeddings, this  generates a checksum for each of your`.mdx`files and stores this in another database table to make sure the embeddings are only regenerated when the file has changed.
+
+### 🏃 Runtime
+
+Step 3. and 4. happen at runtime, anytime the user submits a question. When this happens, the following sequence of tasks is performed:
+
+```
+sequenceDiagram
+    participant
+Client
+    participant
+Edge
+
+Function
+    participant
+DB
+
+(
+pgvector
+)
+    participant
+OpenAI
+
+(
+API
+)
+
+Client
+-
+>>
+Edge
+
+Function
+:
+
+{
+ query
+:
+ lorem ispum
+}
+    critical
+3.
+
+Perform
+ vector similarity search
+
+Edge
+
+Function
+-
+>>
+OpenAI
+
+(
+API
+)
+:
+ create embedding
+for
+ query
+
+OpenAI
+
+(
+API
+)
+-
+>>
+Edge
+
+Function
+:
+ embedding
+vector
+(
+1536
+)
+
+Edge
+
+Function
+-
+>>
+DB
+
+(
+pgvector
+)
+:
+ vector similarity search
+
+DB
+
+(
+pgvector
+)
+-
+>>
+Edge
+
+Function
+:
+ relevant docs content
+    end
+    critical
+4.
+
+Inject
+ content into prompt
+
+Edge
+
+Function
+-
+>>
+OpenAI
+
+(
+API
+)
+:
+ completion request prompt
+:
+ query
++
+ relevant docs content
+
+OpenAI
+
+(
+API
+)
+--
+>>
+Client
+:
+ text
+/
+event
+-
+stream
+:
+ completions response
+    end
+```
+
+The relevant files for this are the[SearchDialog  (Client)](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./components/SearchDialog.tsx)component and the[vector-search  (Edge Function)](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./pages/api/vector-search.ts).
+
+The initialization of the database, including the setup of the`pgvector`extension is stored in the[supabase/migrations  folder](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./supabase/migrations/)which is automatically applied to your local Postgres instance when running`supabase start`.
+
+### Local Development
+
+#### Configuration
+
+* `cp .env.example .env`
+* Set your`OPENAI_KEY`in the newly created`.env`file.
+* Set`NEXT_PUBLIC_SUPABASE_ANON_KEY`and`SUPABASE_SERVICE_ROLE_KEY`run:Note: You have to run supabase to retrieve the keys.
+
+#### Start Supabase
+
+Make sure you have Docker installed and running locally. Then run
+
+```
+supabase start
+```
+
+To retrieve`NEXT_PUBLIC_SUPABASE_ANON_KEY`and`SUPABASE_SERVICE_ROLE_KEY`run:
+
+```
+supabase status
+```
+
+#### Start the Next.js App
+
+In a new terminal window, run
+
+```
+pnpm dev
+```
+
+#### Using your custom .mdx docs
+
+1. By default your documentation will need to be in`.mdx`format. This can be done by renaming existing (or compatible) markdown`.md`file.
+1. Run`pnpm run embeddings`to regenerate embeddings.Note: Make sure supabase is running. To check, run`supabase status`. If is not running run`supabase start`.
+1. Run`pnpm dev`again to refresh NextJS localhost:3000 rendered page.
+
+### Learn More
+
+* Read the blogpost on how we built[ChatGPT for the Supabase Docs](https://supabase.com/blog/chatgpt-supabase-docs).
+* [[Docs] pgvector: Embeddings and vector similarity](https://supabase.com/docs/guides/database/extensions/pgvector)
+* Watch[Greg's](https://twitter.com/ggrdson)"How I built this"[video](https://youtu.be/Yhtjd7yGGGA)on the[Rabbit Hole Syndrome YouTube Channel](https://www.youtube.com/@RabbitHoleSyndrome):
+
+[](https://www.youtube.com/watch?v=Yhtjd7yGGGA)
+
+### Licence
+
+Apache 2.0
+
+[← Back to Templates](/templates)
+
+![OpenAI Doc Search Starter](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F1OntM6THNEUvlUsYy6Bjmf%2F475e39dbc84779538c8ed47c63a37e0e%2Fnextjs_openai_doc_search_og.png&w=3840&q=75)
+
+[supabase-community/nextjs-openai-doc-search](https://github.com/supabase-community/nextjs-openai-doc-search/)
+
+# Next.js OpenAI Doc Search Starter
+
+Template for building your own custom ChatGPT  doc search powered by Next.js, OpenAI, and Supabase.
+
+[Deploy](/new/clone?demo-deion=Template%20for%20building%20your%20own%20custom%20ChatGPT%20%20doc%20search%20powered%20by%20Next.js%2C%20OpenAI%2C%20and%20Supabase.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F1OntM6THNEUvlUsYy6Bjmf%2F475e39dbc84779538c8ed47c63a37e0e%2Fnextjs_openai_doc_search_og.png&demo-title=Next.js%20OpenAI%20Doc%20Search%20Starter&demo-url=https%3A%2F%2Fsupabase.com%2Fdocs&env=OPENAI_KEY&envDeion=Get%20your%20OpenAI%20API%20key%3A&envLink=https%3A%2F%2Fplatform.openai.com%2Faccount%2Fapi-keys&external-id=https%3A%2F%2Fgithub.com%2Fsupabase-community%2Fnextjs-openai-doc-search%2Ftree%2Fmain&from=github&project-name=Next.js%20OpenAI%20Doc%20Search%20Starter&repository-name=nextjs-openai-doc-search-starter&repository-url=https%3A%2F%2Fgithub.com%2Fsupabase-community%2Fnextjs-openai-doc-search%2F&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%7D%5D&teamCreateStatus=hidden)
+
+[View Demo](https://supabase.com/docs)
+
+[Next.js](/templates/next.js)
+
+[AI](/templates/ai)
+
+[Tailwind](/templates/tailwind)
+
+[Supabase](/templates/supabase)
+
+## Next.js OpenAI Doc Search Starter
+
+This starter takes all the`.mdx`files in the`pages`directory and processes them to use as custom context within[OpenAI Text Completion](https://platform.openai.com/docs/guides/completion)prompts.
+
+### Deploy
+
+Deploy this starter to Vercel. The Supabase integration will automatically set the required environment variables and configure your[Database Schema](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./supabase/migrations/20230406025118_init.sql). All you have to do is set your`OPENAI_KEY`and you're ready to go!
+
+[
+
+### Technical Details
+
+Building your own custom ChatGPT involves four steps:
+
+1. [👷 Build time]Pre-process the knowledge base (your`.mdx`files in your`pages`folder).
+1. [👷 Build time]Store embeddings in Postgres with[pgvector](https://supabase.com/docs/guides/database/extensions/pgvector).
+1. [🏃 Runtime]Perform vector similarity search to find the content that's relevant to the question.
+1. [🏃 Runtime]Inject content into OpenAI GPT-3 text completion prompt and stream response to the client.
+
+### 👷 Build time
+
+Step 1. and 2. happen at build time, e.g. when Vercel builds your Next.js app. During this time the[generate-embeddings](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./lib/generate-embeddings.ts)is being executed which performs the following tasks:
+
+```
+sequenceDiagram
+    participant
+Vercel
+    participant
+DB
+
+(
+pgvector
+)
+    participant
+OpenAI
+
+(
+API
+)
+    loop
+1.
+
+Pre
+-
+process the knowledge base
+
+Vercel
+-
+>>
+Vercel
+:
+
+Chunk
+
+.
+mdx
+ pages into sections
+        loop
+2.
+
+Create
+
+&
+ store embeddings
+
+Vercel
+-
+>>
+OpenAI
+
+(
+API
+)
+:
+ create embedding
+for
+ page section
+
+OpenAI
+
+(
+API
+)
+-
+>>
+Vercel
+:
+ embedding
+vector
+(
+1536
+)
+
+Vercel
+-
+>>
+DB
+
+(
+pgvector
+)
+:
+ store embedding
+for
+ page section
+        end
+    end
+```
+
+In addition to storing the embeddings, this  generates a checksum for each of your`.mdx`files and stores this in another database table to make sure the embeddings are only regenerated when the file has changed.
+
+### 🏃 Runtime
+
+Step 3. and 4. happen at runtime, anytime the user submits a question. When this happens, the following sequence of tasks is performed:
+
+```
+sequenceDiagram
+    participant
+Client
+    participant
+Edge
+
+Function
+    participant
+DB
+
+(
+pgvector
+)
+    participant
+OpenAI
+
+(
+API
+)
+
+Client
+-
+>>
+Edge
+
+Function
+:
+
+{
+ query
+:
+ lorem ispum
+}
+    critical
+3.
+
+Perform
+ vector similarity search
+
+Edge
+
+Function
+-
+>>
+OpenAI
+
+(
+API
+)
+:
+ create embedding
+for
+ query
+
+OpenAI
+
+(
+API
+)
+-
+>>
+Edge
+
+Function
+:
+ embedding
+vector
+(
+1536
+)
+
+Edge
+
+Function
+-
+>>
+DB
+
+(
+pgvector
+)
+:
+ vector similarity search
+
+DB
+
+(
+pgvector
+)
+-
+>>
+Edge
+
+Function
+:
+ relevant docs content
+    end
+    critical
+4.
+
+Inject
+ content into prompt
+
+Edge
+
+Function
+-
+>>
+OpenAI
+
+(
+API
+)
+:
+ completion request prompt
+:
+ query
++
+ relevant docs content
+
+OpenAI
+
+(
+API
+)
+--
+>>
+Client
+:
+ text
+/
+event
+-
+stream
+:
+ completions response
+    end
+```
+
+The relevant files for this are the[SearchDialog  (Client)](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./components/SearchDialog.tsx)component and the[vector-search  (Edge Function)](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./pages/api/vector-search.ts).
+
+The initialization of the database, including the setup of the`pgvector`extension is stored in the[supabase/migrations  folder](https://github.com/supabase-community/nextjs-openai-doc-search/tree/main/./supabase/migrations/)which is automatically applied to your local Postgres instance when running`supabase start`.
+
+### Local Development
+
+#### Configuration
+
+* `cp .env.example .env`
+* Set your`OPENAI_KEY`in the newly created`.env`file.
+* Set`NEXT_PUBLIC_SUPABASE_ANON_KEY`and`SUPABASE_SERVICE_ROLE_KEY`run:Note: You have to run supabase to retrieve the keys.
+
+#### Start Supabase
+
+Make sure you have Docker installed and running locally. Then run
+
+```
+supabase start
+```
+
+To retrieve`NEXT_PUBLIC_SUPABASE_ANON_KEY`and`SUPABASE_SERVICE_ROLE_KEY`run:
+
+```
+supabase status
+```
+
+#### Start the Next.js App
+
+In a new terminal window, run
+
+```
+pnpm dev
+```
+
+#### Using your custom .mdx docs
+
+1. By default your documentation will need to be in`.mdx`format. This can be done by renaming existing (or compatible) markdown`.md`file.
+1. Run`pnpm run embeddings`to regenerate embeddings.Note: Make sure supabase is running. To check, run`supabase status`. If is not running run`supabase start`.
+1. Run`pnpm dev`again to refresh NextJS localhost:3000 rendered page.
+
+### Learn More
+
+* Read the blogpost on how we built[ChatGPT for the Supabase Docs](https://supabase.com/blog/chatgpt-supabase-docs).
+* [[Docs] pgvector: Embeddings and vector similarity](https://supabase.com/docs/guides/database/extensions/pgvector)
+* Watch[Greg's](https://twitter.com/ggrdson)"How I built this"[video](https://youtu.be/Yhtjd7yGGGA)on the[Rabbit Hole Syndrome YouTube Channel](https://www.youtube.com/@RabbitHoleSyndrome):
+
+[](https://www.youtube.com/watch?v=Yhtjd7yGGGA)
+
+### Licence
+
+Apache 2.0
+
+## Related Templates
+
+[Chatbot UIA ChatGPT clone for running locally in your browser.byMckay Wrigley](/templates/next.js/chatbot-ui)
+
+[AI Film Recommendation GeneratorGet curated show and movie recommendations with OpenAI GPT-3 API (text-davinci-003) and Vercel Edge Functions with streaming.byStephanie Dietz](/templates/svelte/watch-this)
+
+[Scribble DiffusionTurn your rough sketch into a refined image using AI. Powered by Replicate and ControlNet.byReplicate](/templates/next.js/scribble-diffusion)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)

@@ -1,0 +1,191 @@
+---
+title: SvelteKit Authentication
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/svelte/sveltekit-authentication
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[nextauthjs/sveltekit-auth-example](https://github.com/nextauthjs/sveltekit-auth-example)
+
+# SvelteKit Authentication
+
+A SvelteKit app with authentication.
+
+[Deploy](/new/clone?demo-deion=A%20SvelteKit%20app%20with%20authentication.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F5MLbsADtCPP0UDFL97DA3U%2F64ddd2cd9cc891329c593108e1c517d3%2FCleanShot_2022-12-14_at_10.12.33_2x.png&demo-title=SvelteKit%20Authentication&demo-url=https%3A%2F%2Fsveltekit-auth-example.vercel.app%2F&env=AUTH_SECRET%2CGITHUB_ID%2CGITHUB_SECRET&envDeion=https%3A%2F%2Fdocs.github.com%2Fen%2Fdevelopers%2Fapps%2Fbuilding-oauth-apps%2Fcreating-an-oauth-app&from=templates&project-name=SvelteKit%20Authentication&repository-name=sveltekit-authentication&repository-url=https%3A%2F%2Fgithub.com%2Fnextauthjs%2Fsveltekit-auth-example&skippable-integrations=1)
+
+[View Demo](https://sveltekit-auth-example.vercel.app/)
+
+[Svelte](/templates/svelte)
+
+[Starter](/templates/starter)
+
+[Authentication](/templates/authentication)
+
+[CSS](/templates/css)
+
+[NextAuth.js](/templates/nextauth.js)
+
+![SvelteKit Auth](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F5MLbsADtCPP0UDFL97DA3U%2F64ddd2cd9cc891329c593108e1c517d3%2FCleanShot_2022-12-14_at_10.12.33_2x.png&w=3840&q=75)
+
+> The example repository is maintained from a[monorepo](https://github.com/nextauthjs/next-auth/tree/main/apps/examples/sveltekit). Pull Requests should be opened against[nextauthjs/next-auth](https://github.com/nextauthjs/next-auth).
+>
+
+### Overview
+
+This is the official SvelteKit Auth example for[Auth.js](https://sveltekit.authjs.dev).
+
+### Getting started
+
+You can instantly deploy this example to[Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=sveltekit-auth-example)by clicking the following button.
+
+[](https://vercel.com/new/git/external?repository-url=https://github.com/nextauthjs/sveltekit-auth-example&project-name=sveltekit-auth-example&repository-name=sveltekit-auth-example)
+
+[← Back to Templates](/templates)
+
+![SvelteKit Auth](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F5MLbsADtCPP0UDFL97DA3U%2F64ddd2cd9cc891329c593108e1c517d3%2FCleanShot_2022-12-14_at_10.12.33_2x.png&w=3840&q=75)
+
+[nextauthjs/sveltekit-auth-example](https://github.com/nextauthjs/sveltekit-auth-example)
+
+# SvelteKit Authentication
+
+A SvelteKit app with authentication.
+
+[Deploy](/new/clone?demo-deion=A%20SvelteKit%20app%20with%20authentication.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F5MLbsADtCPP0UDFL97DA3U%2F64ddd2cd9cc891329c593108e1c517d3%2FCleanShot_2022-12-14_at_10.12.33_2x.png&demo-title=SvelteKit%20Authentication&demo-url=https%3A%2F%2Fsveltekit-auth-example.vercel.app%2F&env=AUTH_SECRET%2CGITHUB_ID%2CGITHUB_SECRET&envDeion=https%3A%2F%2Fdocs.github.com%2Fen%2Fdevelopers%2Fapps%2Fbuilding-oauth-apps%2Fcreating-an-oauth-app&from=templates&project-name=SvelteKit%20Authentication&repository-name=sveltekit-authentication&repository-url=https%3A%2F%2Fgithub.com%2Fnextauthjs%2Fsveltekit-auth-example&skippable-integrations=1)
+
+[View Demo](https://sveltekit-auth-example.vercel.app/)
+
+[Svelte](/templates/svelte)
+
+[Starter](/templates/starter)
+
+[Authentication](/templates/authentication)
+
+[CSS](/templates/css)
+
+[NextAuth.js](/templates/nextauth.js)
+
+> The example repository is maintained from a[monorepo](https://github.com/nextauthjs/next-auth/tree/main/apps/examples/sveltekit). Pull Requests should be opened against[nextauthjs/next-auth](https://github.com/nextauthjs/next-auth).
+>
+
+### Overview
+
+This is the official SvelteKit Auth example for[Auth.js](https://sveltekit.authjs.dev).
+
+### Getting started
+
+You can instantly deploy this example to[Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=sveltekit-auth-example)by clicking the following button.
+
+[](https://vercel.com/new/git/external?repository-url=https://github.com/nextauthjs/sveltekit-auth-example&project-name=sveltekit-auth-example&repository-name=sveltekit-auth-example)
+
+## Related Templates
+
+[SvelteKit at the EdgeA SvelteKit app rendered with Edge Functions.byRich Harris](/templates/svelte/sveltekit-edge-functions)
+
+[SvelteKit BoilerplateA SvelteKit app including nested routes, layouts, and page endpoints.by▲ Vercel](/templates/svelte/sveltekit-boilerplate)
+
+[SvelteKit CommerceAn all-in-one starter kit for high-performance e-commerce sites built with SvelteKit.by▲ Vercel](/templates/svelte/sveltekit-commerce)
+
+[Turborepo & SvelteKit StarterThis is an official starter Turborepo with two SvelteKit apps and two local packages.by▲ Vercel](/templates/svelte/turborepo-sveltekit-starter)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)

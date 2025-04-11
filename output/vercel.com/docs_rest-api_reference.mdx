@@ -1,0 +1,153 @@
+---
+title: Using the REST API - Vercel API Docs
+description: No description
+keywords: No keywords
+canonicalUrl: /docs/rest-api/reference/welcome
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Vercel API Docshome page](/docs/rest-api/reference)
+
+* [Docs](https://vercel.com/docs)
+* [Help](https://vercel.com/help)
+
+[Get Started](/docs/rest-api/reference/welcome)
+
+[Reference](/docs/rest-api/reference/endpoints/access-groups/reads-an-access-group)
+
+* [Using the REST API](/docs/rest-api/reference/welcome)
+
+* [Using the Vercel SDK](/docs/rest-api/reference/sdk)
+
+* [Errors](/docs/rest-api/reference/errors)
+
+##### Examples
+
+* [Deployment Automation](/docs/rest-api/reference/examples/deployments-automation)
+* [Domain Management](/docs/rest-api/reference/examples/domain-management)
+* [Environment Variables](/docs/rest-api/reference/examples/environment-variables)
+* [Integrations](/docs/rest-api/reference/examples/integrations)
+* [Logs and Monitoring](/docs/rest-api/reference/examples/logs-monitoring)
+* [Project Management](/docs/rest-api/reference/examples/project-management)
+* [Team and User Management](/docs/rest-api/reference/examples/team-management)
+
+# Using the REST API
+
+Interact programmatically with your Vercel account using the SDK or direct HTTP requests.
+
+[reference documentation](/docs/rest-api/reference/endpoints)
+
+You can deploy new versions of web applications, manage custom domains, retrieve information about deployments, and manage secrets and environment variables for projects.
+
+The API supports any programming language or framework that can send HTTP requests.
+
+To interact with the API, you can:
+
+* [Use the Vercel SDK](/docs/rest-api/reference/sdk)by first instantiating with your token
+* Use the language of your choice by calling the endpoints directly and[providing your token](/docs/rest-api/reference/_sites/vercel/welcome#authentication)
+
+## ​ API Basics
+
+Our API is exposed as an HTTP/1 and HTTP/2 service over SSL. All endpoints live under the URL[https://api.vercel.com](https://api.vercel.com)and then generally follow the REST architecture.
+
+### ​ Server Specs
+
+#### ​ HTTP and TLS
+
+The API supports HTTP versions 1, 1.1, and 2, although HTTP/2 is preferred.
+
+TLS versions 1.2 and 1.3 are supported, with resumption.
+
+For more information on TLS support, refer to the SSL Labs report.
+
+### ​ Content Type
+
+All requests must be encoded as JSON with the Content-Type: application/json . If not otherwise specified, responses from the Vercel API, including errors, are encoded exclusively as JSON as well.
+
+### ​ Authentication
+
+Vercel Access Tokens are required to authenticate and use the Vercel API.
+
+```js
+Authorization
+:
+
+Bearer
+
+<
+TOKEN
+>
+```
+
+#### ​ Creating an Access Token
+
+Access Tokens can be created and managed from inside your[account settings](https://vercel.com/account/tokens).
+
+1. In the upper-right corner of your[dashboard](https://vercel.com/dashboard), click your profile picture, then select**Settings**
+1. Select**Tokens**from the
+1. Enter a deive name for the token
+1. Choose the scope from the list of Teams in the drop-down menu. The scope ensures that only your specified Team(s) can use an Access Token
+1. From the drop-down, select an expiration date for the Token
+1. Click**Create Token**
+1. Once you’ve created an Access Token, securely store the value as it will not be shown again.
+
+#### ​ Expiration
+
+Setting an expiration date on an Access Token is highly recommended and is considered one of the standard security practices that helps keep your information secure. You can select from a default list of expiration dates ranging from 1 day to 1 year. You can view the expiration date of your Access Tokens on the[tokens page.](https://vercel.com/account/tokens)
+
+#### ​ Accessing Resources Owned by a Team
+
+By default, you can access resources contained within your own user account (personal).
+
+To access resources owned by a team, or create a project for a*specific*team, you must first find the[Team ID](https://vercel.com/docs/teams-and-accounts/create-or-join-a-team#find-your-team-id).
+
+After you obtained the Team ID, append it as a query string at the end of the API endpoint URL:
+
+```js
+https
+:
+/
+/
+api
+.
+vercel
+.
+com
+/
+v6
+/
+deployments
+?
+teamId
+=
+[
+teamID
+]
+```
+
+#### ​ Failed Authentication
+
+If authentication is unsuccessful for a request, the[error status code](/docs/rest-api/reference/_sites/vercel/welcome#errors)**403**is returned.
+
+[Using the Vercel SDK](/docs/rest-api/reference/sdk)
+
+[x](https://x.com/vercel)
+
+[github](https://github.com/vercel)
+
+[linkedin](https://linkedin.com/company/vercel)
+
+[Powered by Mintlify](https://mintlify.com/preview-request?utm_campaign=poweredBy&utm_medium=docs&utm_source=vercel)
+
+* [API Basics](#api-basics)
+* [Server Specs](#server-specs)
+* [HTTP and TLS](#http-and-tls)
+* [Content Type](#content-type)
+* [Authentication](#authentication)
+* [Creating an Access Token](#creating-an-access-token)
+* [Expiration](#expiration)
+* [Accessing Resources Owned by a Team](#accessing-resources-owned-by-a-team)
+* [Failed Authentication](#failed-authentication)

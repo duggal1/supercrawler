@@ -1,0 +1,493 @@
+---
+title: Dynamic Model Usage with AI SDK
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/next.js/ai-sdk-feature-flags-edge-config
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[vercel-labs/ai-sdk-flags-edge-config](https://github.com/vercel-labs/ai-sdk-flags-edge-config)
+
+# Dynamic Model Usage with AI SDK
+
+A chatbot that allows you to dynamically set the LLM using Vercel AI SDK with Feature Flags and Edge Config
+
+[Deploy](/new/clone?demo-deion=A%20chatbot%20that%20allows%20you%20to%20dynamically%20set%20the%20LLM%20using%20Vercel%20AI%20SDK%20with%20Feature%20Flags%20and%20Edge%20Config&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F0YgPDxAUUI9MD8EhGCbI5%2Fec6e59b3d4615792ec32f398397b72df%2FUntitled_design__3_.png&demo-title=Dynamic%20Model%20Usage%20with%20AI%20SDK&demo-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-flags-edge-config&edge-config-stores=%7B%22EDGE_CONFIG%22%3A%7B%22model_id%22%3A%22openai%3Agpt-4%22%7D%7D&env=OPENAI_API_KEY%2CGROQ_API_KEY%2CEDGE_CONFIG%2CFLAGS_SECRET&envDeion=Language%20Model%20Providers%20used%20in%20this%20template.%20See%20the%20README%20of%20the%20GitHub%20repo%20for%20instructions%20to%20generate%20the%20FLAGS_SECRET.&from=templates&project-name=Dynamic%20Model%20Usage%20with%20AI%20SDK&repository-name=ai-sdk-feature-flags-edge-config&repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-flags-edge-config)
+
+[View Demo](https://dynamic-model-ai-sdk.vercel.app/)
+
+[Next.js](/templates/next.js)
+
+[AI](/templates/ai)
+
+[Edge Config](/templates/edge-config)
+
+[Tailwind](/templates/tailwind)
+
+[Radix UI](/templates/radix-ui)
+
+![ai-sdk-ff-ec-og](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F0YgPDxAUUI9MD8EhGCbI5%2Fec6e59b3d4615792ec32f398397b72df%2FUntitled_design__3_.png&w=3840&q=75)
+
+## Vercel AI SDK, Next.js, Edge Config and Feature Flags Example
+
+This example demonstrates how to use the[Vercel AI SDK](https://sdk.vercel.ai/docs)with[Next.js](https://nextjs.org/),[Feature Flags](https://vercel.com/docs/workflow-collaboration/feature-flags), and[Edge Config](https://vercel.com/docs/storage/edge-config)to create a flexible AI-powered application with dynamic model switching capabilities.
+
+### Deploy your own
+
+[](https://vercel.com/templates/Next.js/ai-sdk-feature-flags-edge-config)
+
+### How to use
+
+Run[create-next-app](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)with[npm](https://docs.npmjs.com/cli/init),[Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or[pnpm](https://pnpm.io)to bootstrap the example:
+
+```
+npx create
+-
+next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+-
+labs
+/
+ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config
+-
+example
+```
+
+```
+yarn create next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+-
+labs
+/
+ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config
+-
+example
+```
+
+```
+pnpm create next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+-
+labs
+/
+ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config
+-
+example
+```
+
+To run the example locally you need to:
+
+1. Sign up for accounts with the AI providers you want to use (e.g., OpenAI, Anthropic).
+1. Get / Add API keys for each provider.
+1. [Set up Edge Config](https://vercel.com/docs/storage/edge-config/get-started)in your Vercel dashboard.
+1. Set the required environment variables as shown in the`.env.example`file, but in a new file called`.env`.
+1. `npm install`to install the required dependencies.
+1. `npm run dev`to launch the development server.
+
+Note: you can generate the value for the`FLAGS_SECRET`by running the following code in your terminal:
+
+```
+node
+-
+e
+"console.log(crypto.randomBytes(32).toString('base64url'))"
+```
+
+To run the`node-example.ts`file run the following command in your terminal
+
+```
+pnpm tsx node
+-
+example
+.
+ts
+```
+
+### Learn More
+
+To learn more about Vercel AI SDK, Next.js, Feature Flags, and Edge Config, take a look at the following resources:
+
+* [Vercel AI SDK docs](https://sdk.vercel.ai/docs)
+* [Vercel AI Playground](https://play.vercel.ai)
+* [Vercel Feature Flags documentation](https://vercel.com/docs/workflow-collaboration/feature-flags)
+* [Vercel Edge Config documentation](https://vercel.com/docs/concepts/edge-network/edge-config)
+* [Next.js Documentation](https://nextjs.org/docs)- learn about Next.js features and API.
+
+[← Back to Templates](/templates)
+
+![ai-sdk-ff-ec-og](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F0YgPDxAUUI9MD8EhGCbI5%2Fec6e59b3d4615792ec32f398397b72df%2FUntitled_design__3_.png&w=3840&q=75)
+
+[vercel-labs/ai-sdk-flags-edge-config](https://github.com/vercel-labs/ai-sdk-flags-edge-config)
+
+# Dynamic Model Usage with AI SDK
+
+A chatbot that allows you to dynamically set the LLM using Vercel AI SDK with Feature Flags and Edge Config
+
+[Deploy](/new/clone?demo-deion=A%20chatbot%20that%20allows%20you%20to%20dynamically%20set%20the%20LLM%20using%20Vercel%20AI%20SDK%20with%20Feature%20Flags%20and%20Edge%20Config&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F0YgPDxAUUI9MD8EhGCbI5%2Fec6e59b3d4615792ec32f398397b72df%2FUntitled_design__3_.png&demo-title=Dynamic%20Model%20Usage%20with%20AI%20SDK&demo-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-flags-edge-config&edge-config-stores=%7B%22EDGE_CONFIG%22%3A%7B%22model_id%22%3A%22openai%3Agpt-4%22%7D%7D&env=OPENAI_API_KEY%2CGROQ_API_KEY%2CEDGE_CONFIG%2CFLAGS_SECRET&envDeion=Language%20Model%20Providers%20used%20in%20this%20template.%20See%20the%20README%20of%20the%20GitHub%20repo%20for%20instructions%20to%20generate%20the%20FLAGS_SECRET.&from=templates&project-name=Dynamic%20Model%20Usage%20with%20AI%20SDK&repository-name=ai-sdk-feature-flags-edge-config&repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-flags-edge-config)
+
+[View Demo](https://dynamic-model-ai-sdk.vercel.app/)
+
+[Next.js](/templates/next.js)
+
+[AI](/templates/ai)
+
+[Edge Config](/templates/edge-config)
+
+[Tailwind](/templates/tailwind)
+
+[Radix UI](/templates/radix-ui)
+
+## Vercel AI SDK, Next.js, Edge Config and Feature Flags Example
+
+This example demonstrates how to use the[Vercel AI SDK](https://sdk.vercel.ai/docs)with[Next.js](https://nextjs.org/),[Feature Flags](https://vercel.com/docs/workflow-collaboration/feature-flags), and[Edge Config](https://vercel.com/docs/storage/edge-config)to create a flexible AI-powered application with dynamic model switching capabilities.
+
+### Deploy your own
+
+[](https://vercel.com/templates/Next.js/ai-sdk-feature-flags-edge-config)
+
+### How to use
+
+Run[create-next-app](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)with[npm](https://docs.npmjs.com/cli/init),[Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or[pnpm](https://pnpm.io)to bootstrap the example:
+
+```
+npx create
+-
+next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+-
+labs
+/
+ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config
+-
+example
+```
+
+```
+yarn create next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+-
+labs
+/
+ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config
+-
+example
+```
+
+```
+pnpm create next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+-
+labs
+/
+ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config ai
+-
+sdk
+-
+flags
+-
+edge
+-
+config
+-
+example
+```
+
+To run the example locally you need to:
+
+1. Sign up for accounts with the AI providers you want to use (e.g., OpenAI, Anthropic).
+1. Get / Add API keys for each provider.
+1. [Set up Edge Config](https://vercel.com/docs/storage/edge-config/get-started)in your Vercel dashboard.
+1. Set the required environment variables as shown in the`.env.example`file, but in a new file called`.env`.
+1. `npm install`to install the required dependencies.
+1. `npm run dev`to launch the development server.
+
+Note: you can generate the value for the`FLAGS_SECRET`by running the following code in your terminal:
+
+```
+node
+-
+e
+"console.log(crypto.randomBytes(32).toString('base64url'))"
+```
+
+To run the`node-example.ts`file run the following command in your terminal
+
+```
+pnpm tsx node
+-
+example
+.
+ts
+```
+
+### Learn More
+
+To learn more about Vercel AI SDK, Next.js, Feature Flags, and Edge Config, take a look at the following resources:
+
+* [Vercel AI SDK docs](https://sdk.vercel.ai/docs)
+* [Vercel AI Playground](https://play.vercel.ai)
+* [Vercel Feature Flags documentation](https://vercel.com/docs/workflow-collaboration/feature-flags)
+* [Vercel Edge Config documentation](https://vercel.com/docs/concepts/edge-network/edge-config)
+* [Next.js Documentation](https://nextjs.org/docs)- learn about Next.js features and API.
+
+## Related Templates
+
+[Next.js AI ChatbotA full-featured, hackable Next.js AI chatbot built by Vercelby▲ Vercel](/templates/next.js/nextjs-ai-chatbot)
+
+[Upstash Vector + Vercel AI SDK StarterA RAG chatbot starter for expert answers on university degrees. Built using Vercel AI SDK, LangChain, Upstash Vector, and OpenAI.byUpstash](/templates/next.js/upstash-vector-vercel-ai-sdk-starter)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)

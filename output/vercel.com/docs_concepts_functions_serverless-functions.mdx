@@ -1,0 +1,124 @@
+---
+title: Vercel Functions
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/docs/functions
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+* Next.js (/app)
+* Next.js (/pages)
+* Other frameworks
+
+# Vercel Functions
+
+Vercel Functions lets you run server-side code without managing servers. They adapt automatically to user demand, handle connections to APIs and databases, and offer enhanced concurrency through[fluid compute](/docs/functions/fluid-compute), which is useful for AI workloads or anyI/O-boundtasks that require efficient scaling
+
+When you deploy your application, Vercel automatically sets up the tools and optimizations for your chosen[framework](/docs/frameworks). It ensures low latency by routing traffic through Vercel's[Edge Network](/docs/edge-network), and placing your functions in a specific region when you need more control over[data locality](/docs/functions#functions-and-your-data-source).
+
+![Functions location within Vercel's managed infrastructure](/_next/image?url=https%3A%2F%2Fassets.vercel.com%2Fimage%2Fupload%2Fv1737717848%2Ffront%2Fdocs%2Fvercel-functions%2Ffirst_image_light.png&w=3840&q=75)
+
+![Functions location within Vercel's managed infrastructure](/_next/image?url=https%3A%2F%2Fassets.vercel.com%2Fimage%2Fupload%2Fv1737717848%2Ffront%2Fdocs%2Fvercel-functions%2Ffirst_image_dark.png&w=3840&q=75)
+
+## Getting started
+
+To get started with creating your first function, copy the code below:
+
+```
+export
+
+function
+
+GET
+(request
+:
+
+Request
+) {
+
+
+
+return
+
+new
+
+Response
+(
+'Hello from Vercel!'
+);
+
+
+}
+```
+
+[Open inOpen in v0](https://v0.dev/chat?q=
+  Use the latest version of Next.js for this code: export function GET(request: Request) {
+  return new Response('Hello from Vercel!');
+}
+
+  Create an example Next.js app using this code. In your response:
+  1. Specify the type of app (e.g., blog, e-commerce, dashboard)
+  2. Implement the latest Next.js version best practices including:
+    - App Router
+    - Server Components for improved performance
+    - API Routes if needed for backend functionality
+    - Proper use of Client and Server components
+  3. Explain key considerations for:
+    - Performance optimization (e.g., image optimization, code splitting)
+    - Security best practices (e.g., input validation, CSRF protection)
+    - SEO optimization
+  4. Provide a modular structure for the app, including:
+    - Folder structure following latest Next.js version conventions
+    - Component organization
+    - State management approach (if applicable)
+  5. Include responsive design considerations using Tailwind CSS if applicable to the app type and export function GET(request: Request) {
+  return new Response('Hello from Vercel!');
+}
+  6. Demonstrate proper error handling and loading states
+  )
+
+To learn more, see the[quickstart](/docs/functions/quickstart)or[deploy a template](/templates).
+
+## Functions lifecycle
+
+Vercel Functions run in a single[region](/docs/functions/configuring-functions/region)by default, although you can configure them to run in multiple regions if you have globally replicated data. These functions let you add extra capabilities to your application, such as handling authentication, streaming data, or querying databases.
+
+When a user sends a request to your site, Vercel can automatically run a function based on your application code. You do not need to manage servers, or handle scaling.
+
+Vercel creates a new function invocation for each incoming request. If another request arrives soon after the previous one, Vercel[reuses the same function](/docs/functions/fluid-compute#optimized-concurrency)instance to optimize performance and cost efficiency. Over time, Vercel only keeps as many active functions as needed to handle your traffic. Vercel scales your functions down to zero when there are no incoming requests.
+
+By allowing concurrent execution within the same instance (and so using idle time for compute), fluid compute reduces cold starts, lowers latency, and saves on compute costs. It also prevents the need to spin up multiple isolated instances when tasks spend most of their time waiting for external operations.
+
+### Functions and your data source
+
+Functionsshould always execute close to where your data source is to reduce latency. By default, functions using the Node.js runtime execute in Washington, D.C., USA (`iad1`), a common location for external data sources. You can set a new region through your[project's settings on Vercel](/docs/functions/configuring-functions/region#setting-your-default-region).
+
+## Viewing Vercel Function metrics
+
+You can view various performance and cost efficiency metrics using Vercel Observability:
+
+1. Choose your project from the[dashboard](https://vercel.com/d?to=%2F%5Bteam%5D%2F%5Bproject%5D&title=Go+to+dashboard).
+1. Click on theObservabilitytab and select theVercel Functionssection.
+1. Click on the chevron icon to expand and see all charts.
+
+From here, you'll be able to see total consumed and saved GB-Hours, and the ratio of the saved usage. When you have[fluid](/docs/functions/fluid-compute)enabled, you will also see the amount of cost savings from the[optimized concurrency model](/docs/functions/fluid-compute#optimized-concurrency).
+
+## Related
+
+* [What is compute?](/docs/fundamentals/what-is-compute)
+* [What is streaming?](/docs/fundamentals/what-is-streaming)
+* [Fluid compute](/docs/functions/fluid-compute)
+* [Runtimes](/docs/functions/runtimes)
+* [Configuring functions](/docs/functions/configuring-functions)
+* [Streaming](/docs/functions/streaming-functions)
+* [Limits](/docs/functions/limitations)
+* [Functions logs](/docs/functions/logs)
+
+[PreviousCron Jobs](/docs/cron-jobs)
+
+[NextIncremental Static Regeneration](/docs/incremental-static-regeneration)
+
+Was this helpful?

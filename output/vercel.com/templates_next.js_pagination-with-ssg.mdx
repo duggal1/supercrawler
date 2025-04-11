@@ -1,0 +1,445 @@
+---
+title: Pagination with SSG
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/next.js/pagination-with-ssg
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[vercel/examples](https://github.com/vercel/examples/tree/main/solutions/pagination-with-ssg)
+
+# Pagination with SSG
+
+Learn to implement page based pagination with Next.js and Vercel.
+
+[Deploy](/new/clone?demo-deion=Learn%20to%20implement%20page%20based%20pagination%20with%20Next.js%20and%20Vercel.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6OxcYHieYE5AQMYpe1PTi6%2F65cd9f88611eb26aa6aea85a90e44423%2Fpagination-with-ssg.vercel.app_.png&demo-title=Pagination%20with%20SSG&demo-url=https%3A%2F%2Fpagination-with-ssg.vercel.app&project-name=pagination-with-ssg&repository-name=pagination-with-ssg&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fsolutions%2Fpagination-with-ssg)
+
+[View Demo](https://pagination-with-ssg.vercel.app)
+
+[Next.js](/templates/next.js)
+
+[Documentation](/templates/documentation)
+
+[Tailwind](/templates/tailwind)
+
+![Pagination with SSG](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6OxcYHieYE5AQMYpe1PTi6%2F65cd9f88611eb26aa6aea85a90e44423%2Fpagination-with-ssg.vercel.app_.png&w=3840&q=75)
+
+## Pagination with SSG
+
+This example shows how to implement page based pagination with[SSG](https://nextjs.org/docs/basic-features/data-fetching/get-static-props)in Next.js.
+
+### Demo
+
+[https://pagination-with-ssg.vercel.app](https://pagination-with-ssg.vercel.app)
+
+### How it works
+
+The first 5 paginated pages are cached in the edge at build time, and the rest are incrementally cached using[ISR](https://nextjs.org/docs/basic-features/data-fetching/incremental-static-regeneration), that way we can avoid increasing build times no matter how many pages we have while still keeping essential pages cached from the
+start.
+
+The example showcases a PLP (Product Listing Pages) where:
+
+* There are 100 test products and 1 category (PLP)
+* There are 10 results per page for a total of 10 pages, where 5 are pre-generated with`getStaticPaths`
+
+```
+// pages/category/[page].tsx
+
+
+export
+
+const
+
+getStaticPaths
+
+=
+
+async
+
+(
+)
+
+=>
+
+{
+
+return
+
+{
+
+// Prerender the next 5 pages after the first page, which is handled by the index page.
+
+// Other pages will be prerendered at runtime.
+    paths
+:
+
+Array
+.
+from
+(
+{
+ length
+:
+
+5
+
+}
+)
+.
+map
+(
+(
+_
+,
+ i
+)
+
+=>
+
+`
+/category/
+${
+i
++
+
+2
+}
+`
+)
+,
+
+// Block the request for non-generated pages and cache them in the background
+    fallback
+:
+
+'blocking'
+,
+
+}
+}
+```
+
+### How to Use
+
+You can choose from one of the following two methods to use this repository:
+
+#### One-Click Deploy
+
+Deploy the example using[Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
+
+[](https://vercel.com/new/clone?repository-url=https://github.com/vercel/examples/tree/main/solutions/pagination-with-ssg&project-name=pagination-with-ssg&repository-name=pagination-with-ssg)
+
+#### Clone and Deploy
+
+Execute[create-next-app](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)with[pnpm](https://pnpm.io/installation)to bootstrap the example:
+
+```
+pnpm create next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+/
+examples
+/
+tree
+/
+main
+/
+solutions
+/
+pagination
+-
+with
+-
+ssg
+```
+
+Next, run Next.js in development mode:
+
+```
+pnpm dev
+```
+
+Deploy it to the cloud with[Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=edge-middleware-eap)([Documentation](https://nextjs.org/docs/deployment)).
+
+[← Back to Templates](/templates)
+
+![Pagination with SSG](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6OxcYHieYE5AQMYpe1PTi6%2F65cd9f88611eb26aa6aea85a90e44423%2Fpagination-with-ssg.vercel.app_.png&w=3840&q=75)
+
+[vercel/examples](https://github.com/vercel/examples/tree/main/solutions/pagination-with-ssg)
+
+# Pagination with SSG
+
+Learn to implement page based pagination with Next.js and Vercel.
+
+[Deploy](/new/clone?demo-deion=Learn%20to%20implement%20page%20based%20pagination%20with%20Next.js%20and%20Vercel.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6OxcYHieYE5AQMYpe1PTi6%2F65cd9f88611eb26aa6aea85a90e44423%2Fpagination-with-ssg.vercel.app_.png&demo-title=Pagination%20with%20SSG&demo-url=https%3A%2F%2Fpagination-with-ssg.vercel.app&project-name=pagination-with-ssg&repository-name=pagination-with-ssg&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fsolutions%2Fpagination-with-ssg)
+
+[View Demo](https://pagination-with-ssg.vercel.app)
+
+[Next.js](/templates/next.js)
+
+[Documentation](/templates/documentation)
+
+[Tailwind](/templates/tailwind)
+
+## Pagination with SSG
+
+This example shows how to implement page based pagination with[SSG](https://nextjs.org/docs/basic-features/data-fetching/get-static-props)in Next.js.
+
+### Demo
+
+[https://pagination-with-ssg.vercel.app](https://pagination-with-ssg.vercel.app)
+
+### How it works
+
+The first 5 paginated pages are cached in the edge at build time, and the rest are incrementally cached using[ISR](https://nextjs.org/docs/basic-features/data-fetching/incremental-static-regeneration), that way we can avoid increasing build times no matter how many pages we have while still keeping essential pages cached from the
+start.
+
+The example showcases a PLP (Product Listing Pages) where:
+
+* There are 100 test products and 1 category (PLP)
+* There are 10 results per page for a total of 10 pages, where 5 are pre-generated with`getStaticPaths`
+
+```
+// pages/category/[page].tsx
+
+
+export
+
+const
+
+getStaticPaths
+
+=
+
+async
+
+(
+)
+
+=>
+
+{
+
+return
+
+{
+
+// Prerender the next 5 pages after the first page, which is handled by the index page.
+
+// Other pages will be prerendered at runtime.
+    paths
+:
+
+Array
+.
+from
+(
+{
+ length
+:
+
+5
+
+}
+)
+.
+map
+(
+(
+_
+,
+ i
+)
+
+=>
+
+`
+/category/
+${
+i
++
+
+2
+}
+`
+)
+,
+
+// Block the request for non-generated pages and cache them in the background
+    fallback
+:
+
+'blocking'
+,
+
+}
+}
+```
+
+### How to Use
+
+You can choose from one of the following two methods to use this repository:
+
+#### One-Click Deploy
+
+Deploy the example using[Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
+
+[](https://vercel.com/new/clone?repository-url=https://github.com/vercel/examples/tree/main/solutions/pagination-with-ssg&project-name=pagination-with-ssg&repository-name=pagination-with-ssg)
+
+#### Clone and Deploy
+
+Execute[create-next-app](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)with[pnpm](https://pnpm.io/installation)to bootstrap the example:
+
+```
+pnpm create next
+-
+app
+--
+example https
+:
+/
+/
+github
+.
+com
+/
+vercel
+/
+examples
+/
+tree
+/
+main
+/
+solutions
+/
+pagination
+-
+with
+-
+ssg
+```
+
+Next, run Next.js in development mode:
+
+```
+pnpm dev
+```
+
+Deploy it to the cloud with[Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=edge-middleware-eap)([Documentation](https://nextjs.org/docs/deployment)).
+
+## Related Templates
+
+[Next.js Preview ModePreview content changes before publishing.by▲ Vercel](/templates/next.js/nextjs-preview-mode)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)

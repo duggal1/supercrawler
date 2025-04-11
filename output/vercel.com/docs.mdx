@@ -1,0 +1,115 @@
+---
+title: Vercel Documentation
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/docs
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+# Vercel Documentation
+
+## Start with an idea
+
+Vercel builds tools to help you create products faster.
+
+Like[v0](https://v0.dev/), which is your web development assistant. Paste a screenshot or write a few sentences and v0 will generate a starting point for your next app, including the code for how it looks*and*how it works. v0 then connects to Vercel, takes your code, and creates a URL you can share.
+
+Get started in minutes
+
+## Deploy a Template
+
+[View All Templates](/templates/starter)
+
+[Next.js BoilerplateGet started with Next.js and React in seconds.](/templates/next.js/nextjs-boilerplate)
+
+[Nuxt.js 3 BoilerplateA Nuxt.js 3 app, bootstrapped with create-nuxt-app.](/templates/next.js/nuxtjs-boilerplate)
+
+[SvelteKit BoilerplateA SvelteKit app including nested routes, layouts, and page endpoints.](/templates/next.js/sveltekit-boilerplate)
+
+[View All Templates](/templates/starter)
+
+## Iterate quickly while building your product
+
+The first version of your product isn't perfect, so you need to iterate and try things.
+
+You can ask v0 to make updates for you, or if you prefer, export the code to your editor and start building locally. When you've finished adding your new feature, you want to test and make sure it works correctly on different browsers and devices*before*you update your live application.
+
+Vercel integrates with tools like GitHub where you can save snapshots of your codebase for every change. For example, let's say you send your latest code changes to GitHub in a pull request. Vercel automatically creates a new URL from your changes and sends you a link to review before merging.
+
+### Infrastructure from your code
+
+How did that URL get created? Vercel took care of all the infrastructure automation for you:
+
+* It examined your code to understand what tools you're working with
+* It installed the necessary dependencies into a temporary, secure sandbox
+* It ran compute to build your application from these dependencies
+* It took the build output and generated the cloud infrastructure needed to run your app
+* It assigned and secured a domain so you can access your app through a URL
+
+This is all happening inside of an automatically generated*preview*environment on Vercel — a place where you can safely iterate and make changes without affecting your application. For example, you might want to connect to a different database to prevent changing your live data.
+
+If your application works correctly and you're happy with the changes, you can merge this new feature into your main codebase. Once again, Vercel will automatically create and build a new URL for you, in a separate*production*environment.
+
+Just like that, your application is now live and updated around the world. Make a mistake? Don't sweat it — you can instantly go back to your previous version in a few clicks.
+
+## Use your favorite developer tools
+
+Vercel helps your build any way your prefer, whether that is a handful of HTML files or a powerful Java framework. While you don't*need*to use a framework, these abstractions can help you build better products.
+
+Frameworks include components and optimizations to help improve your[Core Web Vitals](https://vercel.com/blog/how-core-web-vitals-affect-seo), which is how search engines determine the speed and quality of your application. Your vitals affect your page ranking in search results, so it's important to pay attention and optimize them.
+
+Frameworks also simplify how you build common patterns, like routing between pages or fetching and displaying data from a database. Vercel supports over 30 different frameworks with zero-configuration.
+
+We are the creators and maintainers of[Next.js](https://nextjs.org), a framework for building React applications. We also help fund the full-time development of[Svelte](https://svelte.dev), as well as support other open-source frameworks.
+
+[Next.jsA React framework that gives you building blocks to create web applications.](https://nextjs.org/)
+
+[TurborepoA high-performance build system for Java and Type codebases.](https://turbo.build/repo)
+
+[Vercel AI SDKAn open source library for building AI-powered user interfaces.](https://sdk.vercel.ai/docs)
+
+## Stay fast and secure
+
+Vercel's developer platform understands the tools and frameworks you're using. This enables us to optimize and secure your application automatically in ways that are normally difficult and time consuming.
+
+Instead of manually writing code to define your application infrastructure, Vercel can automatically convert the output from your framework into infrastructure. For example, we manage:
+
+* [Networking](/docs/edge-network): We help make your application fast globally
+* [Domains](/docs/domains): We can manage your domains, including DNS, SSL certificates, and nameservers
+* [Storage](/docs/storage): We offer cache and object storage, as well as first-party database integrations
+* [Compute](/docs/functions): We provide an autoscaling, distributed, and secure compute platform
+* [CI/CD](/docs/deployments/builds): We automatically deploy your application as you push to your git repository
+
+### Observability
+
+After shipping your application, you need to understand how it's performing in production. Vercel includes tools to help you view logs and traces, measure performance, and analyze traffic.
+
+* [Logging](/docs/runtime-logs): We allow you to view, search, and filter build/runtime logs to investigate issues and monitor your application.
+* [Tracing](/docs/otel): We support integrations with tracing tools like OpenTelemetry for deeper performance analysis.
+* [Analytics](/docs/analytics): We support first-party, privacy-friendly analytics for understanding how users interact with your application.
+* [Metrics](/docs/observability): We display and support querying of performance metrics like request counts, error rates, and API latencies.
+
+We also integrate with other observability tools and support draining logs to any service.
+
+### Security
+
+Vercel helps protect your web application and prevent unwanted traffic.
+
+* [Platform Firewall](/docs/vercel-firewall): We automatically block malicious requests and unwanted bots before they reach your application.
+* [DDoS Protection](/docs/security/ddos-mitigation): We protect your application from traffic spikes caused by Distributed Denial of Service (DDoS) attacks.
+* [Web Application Firewall](/docs/security/vercel-waf): We allow you to define custom rules to protect from common attacks, web scrapers, and other unwanted traffic.
+
+We are compliant with SOC 2 Type 2, ISO 27001:2013, GDPR, PCI DSS, HIPAA, and other acronyms your security team asks about.
+
+### Start building today
+
+Vercel provides tools to build your ideas. We integrate with dozens of[popular databases](https://vercel.com/marketplace), cloud infrastructure providers like[AWS](/docs/oidc/aws), and more.
+
+[What will you ship?](/new)
+
+[NextAccount Management](/docs/accounts)
+
+Was this helpful?

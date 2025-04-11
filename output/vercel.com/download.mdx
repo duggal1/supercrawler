@@ -1,0 +1,112 @@
+---
+title: Vercel CLI Overview
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/docs/cli
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+# Vercel CLI Overview
+
+Vercel gives you multiple ways to interact with and configure your Vercel Projects. With the command-line interface (CLI) you can interact with the Vercel platform using a terminal, or through an automated system, enabling you to[retrieve logs](/docs/cli/logs), manage[certificates](/docs/cli/certs), replicate your deployment environment[locally](/docs/cli/dev), manage Domain Name System (DNS)[records](/docs/cli/dns), and more.
+
+If you'd like to interface with the platform programmatically, check out the[REST API documentation](/docs/rest-api).
+
+## Installing Vercel CLI
+
+To download and install Vercel CLI, run the following command:
+
+```
+pnpm i -g vercel
+```
+
+## Updating Vercel CLI
+
+When there is a new release of Vercel CLI, running any command will show you a message letting you know that an update is available.
+
+If you have installed our command-line interface through[npm](http://npmjs.org/)or[Yarn](https://yarnpkg.com), the easiest way to update it is by running the installation command yet again.
+
+```
+pnpm i -g vercel@latest
+```
+
+If you see permission errors, please read npm's[official guide](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally). Yarn depends on the same configuration as npm.
+
+## Checking the version
+
+The`--version`option can be used to verify the version of Vercel CLI currently being used.
+
+```
+vercel
+
+--version
+```
+
+## Using in a CI/CD environment
+
+Vercel CLI requires you to log in and authenticate before accessing resources or performing administrative tasks. In a terminal environment, you can use[vercel login](/docs/cli/login), which requires manual input. In a CI/CD environment where manual input is not possible, you can create a token on your[tokens page](/account/tokens)and then use the[--token  option](/docs/cli/global-options#token)to authenticate.
+
+## Available Commands
+
+[- alias](/docs/cli/alias)
+
+[- bisect](/docs/cli/bisect)
+
+[- build](/docs/cli/build)
+
+[- certs](/docs/cli/certs)
+
+[- deploy](/docs/cli/deploy)
+
+[- dev](/docs/cli/dev)
+
+[- dns](/docs/cli/dns)
+
+[- domains](/docs/cli/domains)
+
+[- env](/docs/cli/env)
+
+[- git](/docs/cli/git)
+
+[- help](/docs/cli/help)
+
+[- init](/docs/cli/init)
+
+[- inspect](/docs/cli/inspect)
+
+[- link](/docs/cli/link)
+
+[- list](/docs/cli/list)
+
+[- login](/docs/cli/login)
+
+[- logout](/docs/cli/logout)
+
+[- logs](/docs/cli/logs)
+
+[- project](/docs/cli/project)
+
+[- promote](/docs/cli/promote)
+
+[- pull](/docs/cli/pull)
+
+[- redeploy](/docs/cli/redeploy)
+
+[- remove](/docs/cli/remove)
+
+[- rollback](/docs/cli/rollback)
+
+[- switch](/docs/cli/switch)
+
+[- teams](/docs/cli/teams)
+
+[- whoami](/docs/cli/whoami)
+
+[PreviousProject Configuration](/docs/project-configuration)
+
+[NextIntegrations](/docs/integrations)
+
+Was this helpful?

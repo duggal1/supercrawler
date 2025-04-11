@@ -1,0 +1,215 @@
+---
+title: Next.js App Router Playground
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/next.js/app-directory
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[vercel/app-playground](https://github.com/vercel/app-playground)
+
+# Next.js App Router Playground
+
+Examples of many Next.js App Router features.
+
+[Deploy](/new/clone?demo-deion=Examples%20of%20many%20Next.js%20App%20Router%20features.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Fk9BYNIi5HwkHop568SjEI%2Fcfb7e8215a11667d32265b34c43b4b5b%2FCleanShot_2022-10-25_at_14.38.59_2x.png&demo-title=Next.js%20App%20Router%20Playground&demo-url=https%3A%2F%2Fapp-dir.vercel.app%2F&from=templates&project-name=Next.js%20App%20Router%20Playground&repository-name=app-directory&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fapp-playground&skippable-integrations=1)
+
+[View Demo](https://app-dir.vercel.app/)
+
+[Next.js](/templates/next.js)
+
+[Starter](/templates/starter)
+
+[Tailwind](/templates/tailwind)
+
+![Next.js 13 App Playground](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Fk9BYNIi5HwkHop568SjEI%2Fcfb7e8215a11667d32265b34c43b4b5b%2FCleanShot_2022-10-25_at_14.38.59_2x.png&w=3840&q=75)
+
+## Next.js App Router Playground
+
+Next.js recently introduced the App Router with support for:
+
+* **Layouts:**Easily share UI while preserving state and avoiding re-renders.
+* **Server Components:**Making server-first the default for the most dynamic applications.
+* **Streaming:**Display instant loading states and stream in updates.
+* **Suspense for Data Fetching:**`async`/`await`support and the`use`hook for component-level fetching.
+
+The App Router can coexist with the existing`pages`directory for incremental adoption. While you**don't need to use the App Router**when upgrading to Next.js 13, we're laying the foundations to build complex interfaces while shipping less Java.
+
+### Running Locally
+
+1. Install dependencies:
+
+```
+pnpm install
+```
+
+1. Start the dev server:
+
+```
+pnpm dev
+```
+
+### Documentation
+
+[https://nextjs.org/docs](https://nextjs.org/docs)
+
+[← Back to Templates](/templates)
+
+![Next.js 13 App Playground](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Fk9BYNIi5HwkHop568SjEI%2Fcfb7e8215a11667d32265b34c43b4b5b%2FCleanShot_2022-10-25_at_14.38.59_2x.png&w=3840&q=75)
+
+[vercel/app-playground](https://github.com/vercel/app-playground)
+
+# Next.js App Router Playground
+
+Examples of many Next.js App Router features.
+
+[Deploy](/new/clone?demo-deion=Examples%20of%20many%20Next.js%20App%20Router%20features.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Fk9BYNIi5HwkHop568SjEI%2Fcfb7e8215a11667d32265b34c43b4b5b%2FCleanShot_2022-10-25_at_14.38.59_2x.png&demo-title=Next.js%20App%20Router%20Playground&demo-url=https%3A%2F%2Fapp-dir.vercel.app%2F&from=templates&project-name=Next.js%20App%20Router%20Playground&repository-name=app-directory&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fapp-playground&skippable-integrations=1)
+
+[View Demo](https://app-dir.vercel.app/)
+
+[Next.js](/templates/next.js)
+
+[Starter](/templates/starter)
+
+[Tailwind](/templates/tailwind)
+
+## Next.js App Router Playground
+
+Next.js recently introduced the App Router with support for:
+
+* **Layouts:**Easily share UI while preserving state and avoiding re-renders.
+* **Server Components:**Making server-first the default for the most dynamic applications.
+* **Streaming:**Display instant loading states and stream in updates.
+* **Suspense for Data Fetching:**`async`/`await`support and the`use`hook for component-level fetching.
+
+The App Router can coexist with the existing`pages`directory for incremental adoption. While you**don't need to use the App Router**when upgrading to Next.js 13, we're laying the foundations to build complex interfaces while shipping less Java.
+
+### Running Locally
+
+1. Install dependencies:
+
+```
+pnpm install
+```
+
+1. Start the dev server:
+
+```
+pnpm dev
+```
+
+### Documentation
+
+[https://nextjs.org/docs](https://nextjs.org/docs)
+
+## Related Templates
+
+[Next.js CommerceStarter kit for high-performance commerce with Shopify.by▲ Vercel](/templates/next.js/nextjs-commerce)
+
+[Nextra: Docs Starter KitSimple, powerful and flexible markdown-powered docs site. Built with Next.js.by▲ Vercel](/templates/next.js/documentation-starter-kit)
+
+[Blog Starter KitA statically generated blog example using Next.js and Markdown.by▲ Vercel](/templates/next.js/blog-starter-kit)
+
+[Platforms Starter KitNext.js template for building multi-tenant applications with custom domains using App Router, Vercel Postgres, and the Vercel Domains API.by▲ Vercel](/templates/next.js/platforms-starter-kit)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)

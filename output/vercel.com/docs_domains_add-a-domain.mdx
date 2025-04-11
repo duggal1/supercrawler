@@ -1,0 +1,48 @@
+---
+title: Adding & Configuring a Custom Domain
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/docs/domains/working-with-domains/add-a-domain
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+# Adding & Configuring a Custom Domain
+
+Vercel provides all deployments with a`vercel.app`URL, which enables you to share Deployments with your Team for collaboration. However, to provide greater personalization and flexibility to your project, you can instead add acustom domain. If you don't own a domain yet, you can[purchase it with Vercel](/domains).
+
+You can manage all domain settings related to a project in theDomainssection of theSettingstab of the project, regardless of whether you are using[apex domains](#apex-domains)or[subdomains](#subdomains)in your project. This document will guide you through both options.
+
+Hobby teams have a limit of 50 custom domains per project.
+
+## Add and configure domain
+
+The following steps provide an overview of how to add and configure a custom domain in Vercel:
+
+1. [igate to Domain Settings](#igate-to-domain-settings)On the[dashboard](/dashboard), pick the project to which you would like to assign your domain.Once you have selected your project, click on theSettingstab and then select theDomainsmenu item:Selecting the Domains menu item from the Project Settings page.
+1. [Add your domain](#add-your-domain)From theDomainspage, enter the domain you wish to add to the project:Entering a domain for the project from the Domains page.If you add an apex domain (e.g.`example.com`) to the project, Vercel will prompt you to add the`www`subdomain prefix, the apex domain, and[some basic redirection options](/docs/domains/deploying-and-redirecting). For more information on which redirect option to choose, see "[Redirecting  www  domains](/docs/domains/deploying-and-redirecting#redirecting-www-domains)".Choosing redirect options for your apex domain.[Using wildcard domain](#using-wildcard-domain)You can use yourcustom domainas awildcard domainby prefixing it with`*.`.If using your custom domain as a wildcard domain, youmust use the
+nameservers method for verification.To add awildcard domain, use the prefix`*`, for example`*.acme.com`.A wildcard domain being deployed.
+1. [Configure the domain](#configure-the-domain)Once you have added your custom domain, you will need to configure the DNS records of your domain with your registrar so it can be used with your Project. The dashboard will automatically display different methods for configuring it:If the domain is in use by another Vercel account, you will need to[verify access to the domain](#verify-domain-access), with aTXTrecordIf you're using an[Apex domain](#apex-domains)(e.g. example.com), you will need to configure it with anArecordIf you're using a[Subdomain](#subdomains)(e.g. docs.example.com), you will need to configure it with aCNAMErecordBothapex domainsandsubdomainscan also be configured using the[Nameservers](#vercel-nameservers)method.If you are verifying your domain by changing nameservers, you will need to add
+any DNS records to Vercel that you wish to keep from your previous DNS
+provider.[Apex domains](#apex-domains)You can configure apex domains either with aArecord or through theNameserversmethod.Instructions on configuring an apex domain from the Project Domains page.[Subdomains](#subdomains)You can configuresubdomainseither with aCNAMErecord or through theNameserversmethod.Instructions on configuring a subdomain from the Project Domains page.[Vercel Nameservers](#vercel-nameservers)If you choose to use Vercel's nameservers for either[apex domains](#apex-domains)or[subdomains](#subdomains), click on theEnable Vercel DNSbutton to opt in. Once enabled, you will be provided with the Vercel nameservers to copy and use with your registrar.Instructions on opting in to use Vercel Nameservers.
+1. If the domain is in use by another Vercel account, you will need to[verify access to the domain](#verify-domain-access), with aTXTrecord
+1. If you're using an[Apex domain](#apex-domains)(e.g. example.com), you will need to configure it with anArecord
+1. If you're using a[Subdomain](#subdomains)(e.g. docs.example.com), you will need to configure it with aCNAMErecord
+1. [Verify domain access](#verify-domain-access)If the domain is in use by another Vercel account, you may be prompted to verify access to the domain. Note that this will not move the domain into your account, but will allow you to use it in your project. If you have multiple domains to verify, be aware that you can only set up one TXT record at a time, but you can modify it after the domain is transferred.Instructions on verifying a domain by setting a DNS record on the apex domain.
+
+Once the domain has been configured and Vercel has verified it, the status of the domain will be updated within the UI to confirm that it is ready for use.
+
+![A configured domain on the Project Domains page.](/_next/image?url=https%3A%2F%2Fassets.vercel.com%2Fimage%2Fupload%2Fv1689795055%2Fdocs-assets%2Fstatic%2Fdocs%2Fconcepts%2Fprojects%2Fcustom-domains%2Fconfigured-domain.png&w=1920&q=75)
+
+![A configured domain on the Project Domains page.](/_next/image?url=https%3A%2F%2Fassets.vercel.com%2Fimage%2Fupload%2Fv1689795055%2Fdocs-assets%2Fstatic%2Fdocs%2Fconcepts%2Fprojects%2Fcustom-domains%2Fconfigured-domain-dark.png&w=1920&q=75)
+
+If a someone visits your domain with or without the "www" subdomain prefix,
+Vercel will attempt to redirect them to your domain. For more robust
+protection, you should explicitly add this domain and[redirect
+it](/docs/domains/deploying-and-redirecting#redirecting-domains).
+
+[NextAccount Management](/docs/accounts)
+
+Was this helpful?

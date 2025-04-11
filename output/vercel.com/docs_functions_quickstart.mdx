@@ -1,0 +1,136 @@
+---
+title: Getting started with Vercel Functions
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/docs/functions/quickstart
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+* Next.js (/app)
+* Next.js (/pages)
+* Other frameworks
+
+# Getting started with Vercel Functions
+
+In this guide, you'll learn how to get started with Vercel Functions using your favorite[frontend framework](/docs/frameworks)(or no framework).
+
+## Prerequisites
+
+* You can use an existing project or create a new one. If you don't have one, you can run the following terminal command to create a Next.js project:terminalTypeTypeJava`npx create-next-app@latest--type`
+
+## Create a Vercel Function
+
+Open the code block in v0 for a walk through on creating a Vercel Function with the below code, or copy the code into your project. The function fetches data from the[Vercel API](https://api.vercel.app/products)and returns it as a JSON response.
+
+```
+export
+
+function
+
+GET
+(request
+:
+
+Request
+) {
+
+
+
+const
+
+response
+
+=
+
+await
+
+fetch
+(
+'https://
+api
+.vercel.app/products'
+);
+
+
+
+const
+
+products
+
+=
+
+await
+
+response
+.json
+();
+
+
+
+return
+
+Response
+.json
+(products);
+
+
+}
+```
+
+[Open inOpen in v0](https://v0.dev/chat?q=
+  Use the latest version of Next.js for this code: export function GET(request: Request) {
+  const response = await fetch('https://api.vercel.app/products');
+  const products = await response.json();
+  return Response.json(products);
+}
+
+  Create an example Next.js app using this code. In your response:
+  1. Specify the type of app (e.g., blog, e-commerce, dashboard)
+  2. Implement the latest Next.js version best practices including:
+    - App Router
+    - Server Components for improved performance
+    - API Routes if needed for backend functionality
+    - Proper use of Client and Server components
+  3. Explain key considerations for:
+    - Performance optimization (e.g., image optimization, code splitting)
+    - Security best practices (e.g., input validation, CSRF protection)
+    - SEO optimization
+  4. Provide a modular structure for the app, including:
+    - Folder structure following latest Next.js version conventions
+    - Component organization
+    - State management approach (if applicable)
+  5. Include responsive design considerations using Tailwind CSS if applicable to the app type and export function GET(request: Request) {
+  const response = await fetch('https://api.vercel.app/products');
+  const products = await response.json();
+  return Response.json(products);
+}
+  6. Demonstrate proper error handling and loading states
+  
+
+    Additionally, as this is a quickstart guide:
+    7. Teach how to implement this from scratch in a Next.js project
+    8. Create a demo to walk through the implementation
+    9. Provide step-by-step instructions and explanations suitable for a beginner, including:
+      - Detailed project setup
+      - In-depth file structure explanation
+      - Comprehensive code breakdown and implementation steps
+      - Any necessary configuration with explanations of each setting
+    10. Include common pitfalls and how to avoid them
+    11. Suggest resources for further learning on each major concept introduced
+    )
+
+## Next steps
+
+Now that you have set up a Vercel Function, you can explore the following topics to learn more:
+
+* [Explore the functions API reference](/docs/functions/functions-api-reference): Learn more about creating a Vercel Function.
+* [Learn about streaming functions](/docs/functions/streaming-functions): Learn how to fetch streamable data with Vercel Functions.
+* [Choosing a Runtime](/docs/functions/runtimes): Learn more about the differences between the Node.js and Edge runtimes.
+* [Configuring Functions](/docs/functions/configuring-functions): Learn about the different options for configuring a Vercel Function.
+
+[NextAccount Management](/docs/accounts)
+
+Was this helpful?

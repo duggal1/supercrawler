@@ -1,0 +1,310 @@
+---
+title: Platforms Starter Kit
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/new/templates/next.js/platforms-starter-kit
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+1. [](/home)
+
+[← Back to Templates](/new/templates)
+
+[vercel/platforms](https://github.com/vercel/platforms)
+
+# Platforms Starter Kit
+
+Next.js template for building multi-tenant applications with custom domains using App Router, Vercel Postgres, and the Vercel Domains API.
+
+[Deploy](/new/clone?demo-deion=A%20template%20for%20site%20builders%20and%20low-code%20tools.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F40JwjdHlPr0Z575MPYbxUA%2Fd8fd5ff05155a247deff6010774377d3%2FVercel_Platforms.png&demo-title=Platforms%20Starter%20Kit&demo-url=https%3A%2F%2Fdemo.vercel.pub%2F&env=NEXT_PUBLIC_ROOT_DOMAIN%2CNEXTAUTH_SECRET%2CAUTH_GITHUB_ID%2CAUTH_GITHUB_SECRET%2CAUTH_BEARER_TOKEN%2CPROJECT_ID_VERCEL%2CTEAM_ID_VERCEL%2COPENAI_API_KEY&envDeion=These%20environment%20variables%20are%20required%20to%20run%20this%20application.%20The%20link%20below%20describes%20how%20to%20get%20them.&envLink=https%3A%2F%2Fvercel.com%2Fguides%2Fnextjs-multi-tenant-application%233.-add-environment-variables&from=templates&project-name=Platforms%20Starter%20Kit&repository-name=platforms-starter-kit&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fplatforms&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
+[View Demo](https://demo.vercel.pub/)
+
+[Next.js](/templates/next.js)
+
+[Multi tenant-apps](/templates/multi-tenant-apps)
+
+[Blog](/templates/blog)
+
+[Authentication](/templates/authentication)
+
+[Tailwind](/templates/tailwind)
+
+[Vercel Postgres](/templates/vercel-postgres)
+
+[Vercel Blob](/templates/vercel-blob)
+
+[NextAuth.js](/templates/nextauth.js)
+
+![Platforms Starter Kit Thumbnail Image](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F40JwjdHlPr0Z575MPYbxUA%2Fd8fd5ff05155a247deff6010774377d3%2FVercel_Platforms.png&w=3840&q=75)
+
+### Introduction
+
+The[Platforms Starter Kit](https://app.vercel.pub/)is a full-stack Next.js app with multi-tenancy and custom domain support. Built with[Next.js App Router](https://nextjs.org/docs/app),[Vercel Postgres](https://vercel.com/storage/postgres)and the[Vercel Domains API](https://vercel.com/docs/rest-api/endpoints#domains).
+
+Here's a quick 30-second demo:
+
+[https://github.com/vercel/platforms/assets/28986134/bd370257-0c27-4cf5-8a56-28589f36f0ef](https://github.com/vercel/platforms/assets/28986134/bd370257-0c27-4cf5-8a56-28589f36f0ef)
+
+### Features
+
+1. **Multi-tenancy:**Programmatically assign unlimited custom domains, subdomains, and SSL certificates to your users using the[Vercel Domains API](https://vercel.com/docs/rest-api/endpoints#domains)
+1. **Performance**: Fast & beautiful blog posts cached via[Vercel's Edge Network](https://vercel.com/docs/concepts/edge-network/overview), with the ability to invalidate the cache on-demand (when users make changes) using[Incremental Static Regeneration](https://vercel.com/docs/concepts/next.js/incremental-static-regeneration)+ Next.js'`revalidateTag`API
+1. **AI Editor**: AI-powered Markdown editor for a Notion- writing experience powered by[Novel](https://novel.sh/)
+1. **Image Uploads**: Drag & drop / copy & paste image uploads, backed by[Vercel Blob](https://vercel.com/storage/blob)
+1. **Custom s**: Custom fonts, 404 pages, favicons, sitemaps for each site via the[Next.js file-based Metadata API](https://nextjs.org/docs/app/api-reference/file-conventions/metadata)
+1. **Dynamic OG Cards**: Each blog post comes with a dynamic OG image powered by[@vercel/og](https://vercel.com/docs/concepts/functions/edge-functions/og-image-generation)
+1. **Dark Mode**: For a better user experience at night
+1. **Multi-tenant Preview URLs**: Preview changes to your client sites using[Vercel Preview URLs](https://vercel.com/docs/deployments/generated-urls).[Learn more](https://vercel.com/guides/nextjs-multi-tenant-application#3.-multi-tenant-preview-urls).
+
+### Deploy Your Own
+
+Deploy your own version of this starter kit with Vercel.
+
+[](https://vercel.com/new/clone?demo-title=Platforms+Starter+Kit&demo-deion=A+template+for+site+builders+and+low-code+tools.&demo-url=https%3A%2F%2Fdemo.vercel.pub%2F&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F40JwjdHlPr0Z575MPYbxUA%2Fd5903afc68cb34569a3886293414c37c%2FOG_Image.png&project-name=Platforms+Starter+Kit&repository-name=platforms-starter-kit&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fplatforms&from=templates&env=NEXT_PUBLIC_ROOT_DOMAIN%2CNEXTAUTH_SECRET%2CAUTH_GITHUB_ID%2CAUTH_GITHUB_SECRET%2CAUTH_BEARER_TOKEN%2CPROJECT_ID_VERCEL%2CTEAM_ID_VERCEL%2COPENAI_API_KEY&envDeion=These%20environment%20variables%20are%20required%20to%20run%20this%20application.%20The%20link%20below%20describes%20how%20to%20get%20them.&envLink=https%3A%2F%2Fvercel.com%2Fguides%2Fnextjs-multi-tenant-application%233.-add-environment-variables&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
+You can also[read the guide](https://vercel.com/guides/nextjs-multi-tenant-application)to learn how to develop your own version of this template.
+
+### What is a multi-tenant application?
+
+Multi-tenant applications serve multiple customers across different subdomains/custom domains with a single unified codebase.
+
+For example, our demo is a multi-tenant application:
+
+* Subdomain:[demo.vercel.pub](http://demo.vercel.pub)
+* Custom domain:[platformize.co](http://platformize.co)(maps to[demo.vercel.pub](http://demo.vercel.pub))
+* Build your own:[app.vercel.pub](http://app.vercel.pub)
+
+Another example is[Hashnode](https://vercel.com/customers/hashnode), a popular blogging platform. Each writer has their own unique`.hashnode.dev`subdomain for their blog:
+
+* [eda.hashnode.dev](https://eda.hashnode.dev/)
+* [katycodesstuff.hashnode.dev](https://katycodesstuff.hashnode.dev/)
+* [akoskm.hashnode.dev](https://akoskm.hashnode.dev/)
+
+Users can also map custom domains to their`.hashnode.dev`subdomain:
+
+* [akoskm.com](https://akoskm.com/)→[akoskm.hashnode.dev](https://akoskm.hashnode.dev/)
+
+With the Platforms Starter Kit, you can offer unlimited custom domains at no extra cost to your customers as a premium feature, without having to worry about custom nameservers or configuring SSL certificates.
+
+### Examples of platforms
+
+Vercel customers like[Hashnode](https://vercel.com/customers/hashnode),[Super](https://super.so), and[Cal.com](https://cal.com)are building scalable platforms on top of Vercel and Next.js. There are multiple types of platforms you can build with this starter kit:
+
+#### 1. Content creation platforms
+
+These are content-heavy platforms (blogs) with simple, standardized page layouts and route structure.
+
+> “With Vercel, we spend less time managing our infrastructure and more time delivering value to our users.” — Sandeep Panda, Co-founder, Hashnode
+>
+
+1. [Hashnode](https://hashnode.com)
+1. [Mintlify](https://mintlify.com/)
+1. [Read.cv](https://read.cv/)
+
+#### 2. Website & e-commerce store builders
+
+No-code site builders with customizable pages.
+
+By using Next.js and Vercel,[Super](https://super.so/)has fast, globally distributed websites with a no-code editor (Notion). Their customers get all the benefits of Next.js (like[Image Optimization](https://nextjs.org/docs/basic-features/image-optimization)) without touching any code.
+
+1. [Super.so](https://super.so)
+1. [Typedream](https://typedream.com)
+1. [Makeswift](https://www.makeswift.com/)
+
+#### 3. B2B2C platforms
+
+Multi-tenant authentication, login, and access controls.
+
+With Vercel and Next.js, platforms like[Instatus](https://instatus.com)are able to create status pages that are*10x faster*than competitors.
+
+1. [Instatus](https://instatus.com/)
+1. [Cal.com](https://cal.com/)
+1. [Dub](https://dub.co/)
+
+### Built on open source
+
+This working demo site was built using the Platforms Starter Kit and:
+
+* [Next.js](https://nextjs.org/)as the React framework
+* [Tailwind](https://tailwindcss.com/)for CSS styling
+* [Drizzle](https://orm.drizzle.team/)as the ORM for database access
+* [Novel](https://novel.sh/)for the WYSIWYG editor
+* [Vercel Postgres](https://vercel.com/storage/postgres)for the database
+* [Vercel Blob](https://vercel.com/storage/blob)for image uploads
+* [NextAuth.js](https://next-auth.js.org/)for authentication
+* [Tremor](https://tremor.so/)for charts
+* [Vercel](http://vercel.com/)for deployment
+
+### Contributing
+
+* [Start a discussion](https://github.com/vercel/platforms/discussions)with a question, piece of feedback, or idea you want to share with the team.
+* [Open an issue](https://github.com/vercel/platforms/issues)if you believe you've encountered a bug with the starter kit.
+
+### Author
+
+* Steven Tey ([@steventey](https://twitter.com/steventey))
+
+### License
+
+The MIT License.
+
+[← Back to Templates](/new/templates)
+
+![Platforms Starter Kit Thumbnail Image](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F40JwjdHlPr0Z575MPYbxUA%2Fd8fd5ff05155a247deff6010774377d3%2FVercel_Platforms.png&w=3840&q=75)
+
+[vercel/platforms](https://github.com/vercel/platforms)
+
+# Platforms Starter Kit
+
+Next.js template for building multi-tenant applications with custom domains using App Router, Vercel Postgres, and the Vercel Domains API.
+
+[Deploy](/new/clone?demo-deion=A%20template%20for%20site%20builders%20and%20low-code%20tools.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F40JwjdHlPr0Z575MPYbxUA%2Fd8fd5ff05155a247deff6010774377d3%2FVercel_Platforms.png&demo-title=Platforms%20Starter%20Kit&demo-url=https%3A%2F%2Fdemo.vercel.pub%2F&env=NEXT_PUBLIC_ROOT_DOMAIN%2CNEXTAUTH_SECRET%2CAUTH_GITHUB_ID%2CAUTH_GITHUB_SECRET%2CAUTH_BEARER_TOKEN%2CPROJECT_ID_VERCEL%2CTEAM_ID_VERCEL%2COPENAI_API_KEY&envDeion=These%20environment%20variables%20are%20required%20to%20run%20this%20application.%20The%20link%20below%20describes%20how%20to%20get%20them.&envLink=https%3A%2F%2Fvercel.com%2Fguides%2Fnextjs-multi-tenant-application%233.-add-environment-variables&from=templates&project-name=Platforms%20Starter%20Kit&repository-name=platforms-starter-kit&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fplatforms&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
+[View Demo](https://demo.vercel.pub/)
+
+[Next.js](/templates/next.js)
+
+[Multi tenant-apps](/templates/multi-tenant-apps)
+
+[Blog](/templates/blog)
+
+[Authentication](/templates/authentication)
+
+[Tailwind](/templates/tailwind)
+
+[Vercel Postgres](/templates/vercel-postgres)
+
+[Vercel Blob](/templates/vercel-blob)
+
+[NextAuth.js](/templates/nextauth.js)
+
+### Introduction
+
+The[Platforms Starter Kit](https://app.vercel.pub/)is a full-stack Next.js app with multi-tenancy and custom domain support. Built with[Next.js App Router](https://nextjs.org/docs/app),[Vercel Postgres](https://vercel.com/storage/postgres)and the[Vercel Domains API](https://vercel.com/docs/rest-api/endpoints#domains).
+
+Here's a quick 30-second demo:
+
+[https://github.com/vercel/platforms/assets/28986134/bd370257-0c27-4cf5-8a56-28589f36f0ef](https://github.com/vercel/platforms/assets/28986134/bd370257-0c27-4cf5-8a56-28589f36f0ef)
+
+### Features
+
+1. **Multi-tenancy:**Programmatically assign unlimited custom domains, subdomains, and SSL certificates to your users using the[Vercel Domains API](https://vercel.com/docs/rest-api/endpoints#domains)
+1. **Performance**: Fast & beautiful blog posts cached via[Vercel's Edge Network](https://vercel.com/docs/concepts/edge-network/overview), with the ability to invalidate the cache on-demand (when users make changes) using[Incremental Static Regeneration](https://vercel.com/docs/concepts/next.js/incremental-static-regeneration)+ Next.js'`revalidateTag`API
+1. **AI Editor**: AI-powered Markdown editor for a Notion- writing experience powered by[Novel](https://novel.sh/)
+1. **Image Uploads**: Drag & drop / copy & paste image uploads, backed by[Vercel Blob](https://vercel.com/storage/blob)
+1. **Custom s**: Custom fonts, 404 pages, favicons, sitemaps for each site via the[Next.js file-based Metadata API](https://nextjs.org/docs/app/api-reference/file-conventions/metadata)
+1. **Dynamic OG Cards**: Each blog post comes with a dynamic OG image powered by[@vercel/og](https://vercel.com/docs/concepts/functions/edge-functions/og-image-generation)
+1. **Dark Mode**: For a better user experience at night
+1. **Multi-tenant Preview URLs**: Preview changes to your client sites using[Vercel Preview URLs](https://vercel.com/docs/deployments/generated-urls).[Learn more](https://vercel.com/guides/nextjs-multi-tenant-application#3.-multi-tenant-preview-urls).
+
+### Deploy Your Own
+
+Deploy your own version of this starter kit with Vercel.
+
+[](https://vercel.com/new/clone?demo-title=Platforms+Starter+Kit&demo-deion=A+template+for+site+builders+and+low-code+tools.&demo-url=https%3A%2F%2Fdemo.vercel.pub%2F&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F40JwjdHlPr0Z575MPYbxUA%2Fd5903afc68cb34569a3886293414c37c%2FOG_Image.png&project-name=Platforms+Starter+Kit&repository-name=platforms-starter-kit&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fplatforms&from=templates&env=NEXT_PUBLIC_ROOT_DOMAIN%2CNEXTAUTH_SECRET%2CAUTH_GITHUB_ID%2CAUTH_GITHUB_SECRET%2CAUTH_BEARER_TOKEN%2CPROJECT_ID_VERCEL%2CTEAM_ID_VERCEL%2COPENAI_API_KEY&envDeion=These%20environment%20variables%20are%20required%20to%20run%20this%20application.%20The%20link%20below%20describes%20how%20to%20get%20them.&envLink=https%3A%2F%2Fvercel.com%2Fguides%2Fnextjs-multi-tenant-application%233.-add-environment-variables&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
+You can also[read the guide](https://vercel.com/guides/nextjs-multi-tenant-application)to learn how to develop your own version of this template.
+
+### What is a multi-tenant application?
+
+Multi-tenant applications serve multiple customers across different subdomains/custom domains with a single unified codebase.
+
+For example, our demo is a multi-tenant application:
+
+* Subdomain:[demo.vercel.pub](http://demo.vercel.pub)
+* Custom domain:[platformize.co](http://platformize.co)(maps to[demo.vercel.pub](http://demo.vercel.pub))
+* Build your own:[app.vercel.pub](http://app.vercel.pub)
+
+Another example is[Hashnode](https://vercel.com/customers/hashnode), a popular blogging platform. Each writer has their own unique`.hashnode.dev`subdomain for their blog:
+
+* [eda.hashnode.dev](https://eda.hashnode.dev/)
+* [katycodesstuff.hashnode.dev](https://katycodesstuff.hashnode.dev/)
+* [akoskm.hashnode.dev](https://akoskm.hashnode.dev/)
+
+Users can also map custom domains to their`.hashnode.dev`subdomain:
+
+* [akoskm.com](https://akoskm.com/)→[akoskm.hashnode.dev](https://akoskm.hashnode.dev/)
+
+With the Platforms Starter Kit, you can offer unlimited custom domains at no extra cost to your customers as a premium feature, without having to worry about custom nameservers or configuring SSL certificates.
+
+### Examples of platforms
+
+Vercel customers like[Hashnode](https://vercel.com/customers/hashnode),[Super](https://super.so), and[Cal.com](https://cal.com)are building scalable platforms on top of Vercel and Next.js. There are multiple types of platforms you can build with this starter kit:
+
+#### 1. Content creation platforms
+
+These are content-heavy platforms (blogs) with simple, standardized page layouts and route structure.
+
+> “With Vercel, we spend less time managing our infrastructure and more time delivering value to our users.” — Sandeep Panda, Co-founder, Hashnode
+>
+
+1. [Hashnode](https://hashnode.com)
+1. [Mintlify](https://mintlify.com/)
+1. [Read.cv](https://read.cv/)
+
+#### 2. Website & e-commerce store builders
+
+No-code site builders with customizable pages.
+
+By using Next.js and Vercel,[Super](https://super.so/)has fast, globally distributed websites with a no-code editor (Notion). Their customers get all the benefits of Next.js (like[Image Optimization](https://nextjs.org/docs/basic-features/image-optimization)) without touching any code.
+
+1. [Super.so](https://super.so)
+1. [Typedream](https://typedream.com)
+1. [Makeswift](https://www.makeswift.com/)
+
+#### 3. B2B2C platforms
+
+Multi-tenant authentication, login, and access controls.
+
+With Vercel and Next.js, platforms like[Instatus](https://instatus.com)are able to create status pages that are*10x faster*than competitors.
+
+1. [Instatus](https://instatus.com/)
+1. [Cal.com](https://cal.com/)
+1. [Dub](https://dub.co/)
+
+### Built on open source
+
+This working demo site was built using the Platforms Starter Kit and:
+
+* [Next.js](https://nextjs.org/)as the React framework
+* [Tailwind](https://tailwindcss.com/)for CSS styling
+* [Drizzle](https://orm.drizzle.team/)as the ORM for database access
+* [Novel](https://novel.sh/)for the WYSIWYG editor
+* [Vercel Postgres](https://vercel.com/storage/postgres)for the database
+* [Vercel Blob](https://vercel.com/storage/blob)for image uploads
+* [NextAuth.js](https://next-auth.js.org/)for authentication
+* [Tremor](https://tremor.so/)for charts
+* [Vercel](http://vercel.com/)for deployment
+
+### Contributing
+
+* [Start a discussion](https://github.com/vercel/platforms/discussions)with a question, piece of feedback, or idea you want to share with the team.
+* [Open an issue](https://github.com/vercel/platforms/issues)if you believe you've encountered a bug with the starter kit.
+
+### Author
+
+* Steven Tey ([@steventey](https://twitter.com/steventey))
+
+### License
+
+The MIT License.
+
+## Related Templates
+
+[Novel – AI-powered Notion- editorA Notion- WYSYWIG editor with AI-powered autocompletions, built with Tiptap, OpenAI, and Vercel AI SDK.bySteven Tey](/new/templates/next.js/novel)
+
+[Nextra: Docs Starter KitSimple, powerful and flexible markdown-powered docs site. Built with Next.js.by▲ Vercel](/new/templates/next.js/documentation-starter-kit)
+
+[Next.js Contentlayer Blog StarterA blog template with Next.js 13 App Router, Contentlayer, Tailwind CSS and dark mode.byShadcn](/new/templates/next.js/nextjs-contentlayer)
+
+[Blog with Native Content EditingA Sanity-powered blog with native content editing and instant previews.bySanity](/new/templates/next.js/blog-nextjs-sanity)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential

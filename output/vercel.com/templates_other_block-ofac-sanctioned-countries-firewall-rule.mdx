@@ -1,0 +1,221 @@
+---
+title: Block OFAC-Sanctioned Countries Firewall Rule
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/other/block-ofac-sanctioned-countries-firewall-rule
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[vercel/firewall-templates](https://github.com/vercel/firewall-templates/tree/main/ofac-sanctioned-countries)
+
+# Block OFAC-Sanctioned Countries Firewall Rule
+
+Use this template to quickly implement blocks against traffic from OFAC-sanctioned countries with the Vercel Web Application Firewall (WAF).
+
+[Add Firewall Rule](/d?to=%2F%5Bteam%5D%2F%5Bproject%5D%2Ffirewall%2Fconfigure%2Frule%2Fnew%3Ftemplate%3D%257B%2522name%2522%253A%2522Block%2Btraffic%2Bfrom%2BOFAC-sanctioned%2Bcountries%2522%252C%2522active%2522%253Atrue%252C%2522deion%2522%253A%2522Blocks%2Btraffic%2Bfrom%2BOFAC-sanctioned%2Bcountries%2Band%2Benforces%2Ba%2Bone-hour%2Bpersistent%2Bblock%2Bafter%2Bthe%2Bfirst%2Bviolation.%2522%252C%2522action%2522%253A%257B%2522mitigate%2522%253A%257B%2522redirect%2522%253Anull%252C%2522action%2522%253A%2522deny%2522%252C%2522rateLimit%2522%253Anull%252C%2522actionDuration%2522%253A%25221h%2522%257D%257D%252C%2522id%2522%253A%2522%2522%252C%2522conditionGroup%2522%253A%255B%257B%2522conditions%2522%253A%255B%257B%2522type%2522%253A%2522geo_country%2522%252C%2522op%2522%253A%2522inc%2522%252C%2522value%2522%253A%255B%2522SY%2522%252C%2522IR%2522%252C%2522RU%2522%252C%2522CU%2522%252C%2522KP%2522%255D%257D%255D%257D%255D%257D%26sig%3Dfe7d3b4c6189b757e95c4acbf2d631d590399bce&title=Add+Firewall+Rule+from+Template)
+
+[Vercel WAF Docs](https://vercel.com/docs/security/vercel-waf)
+
+[Other](/templates/other)
+
+[Vercel Firewall](/templates/vercel-firewall)
+
+[None](/templates/none)
+
+![Firewall Template-OFAC](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F3iQuV0wtxtxKrEcVLTzESq%2F995d573ec9da0f008ed88bf8a9b62f48%2FFirewall_Template-OFAC.png&w=3840&q=75)
+
+## Block OFAC-Sanctioned Countries
+
+This template provides a preset, customizable Vercel Firewall rule which is designed to support your compliance with US export control regulations by offering the ability to restrict access from sanctioned and embargoed regions.
+
+### Overview
+
+Identify incoming requests based on their country of origin and block access from specified OFAC-sanctioned countries. The list is not meant to be exhaustive, and may not include all sanctioned countries as of any given date. Updating and customizing the list of countries, ensuring that the firewall rule is operating as intended, and otherwise maintaining the compliance of your product and operations remains your responsibility.
+
+### Consider customization
+
+The generated Firewall rule provides a basic structure for blocking traffic from countries sanctioned by the Office of Foreign Assets Control (OFAC). Consider customizing the following parameters to suit your specific compliance needs:
+
+1. **Country List**: Update the list of countries to be blocked based on the latest government sanctions program or any countries you desire to add.
+1. **Exception Handling**: Configure exceptions for specific IP addresses or entities that require access despite country restrictions.
+
+### Persistent Action
+
+The rule includes a persistent action set to a duration of 1 hour. Any requests blocked due to persistent actions, which are activated after the first violation of the rule, are blocked before any usage is incurred.
+
+### Availability
+
+This solution can be implemented by users on all plans.
+
+### To Use
+
+To use this template, follow these steps:
+
+1. Click "Add Firewall Rule."
+1. Select your team and project.
+1. Configure the rule to block traffic from countries sanctioned by the Office of Foreign Assets Control (OFAC) as necessary.
+1. Don't forget to hit "Save," and then "Publish" to activate the rule.
+
+[← Back to Templates](/templates)
+
+![Firewall Template-OFAC](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F3iQuV0wtxtxKrEcVLTzESq%2F995d573ec9da0f008ed88bf8a9b62f48%2FFirewall_Template-OFAC.png&w=3840&q=75)
+
+[vercel/firewall-templates](https://github.com/vercel/firewall-templates/tree/main/ofac-sanctioned-countries)
+
+# Block OFAC-Sanctioned Countries Firewall Rule
+
+Use this template to quickly implement blocks against traffic from OFAC-sanctioned countries with the Vercel Web Application Firewall (WAF).
+
+[Add Firewall Rule](/d?to=%2F%5Bteam%5D%2F%5Bproject%5D%2Ffirewall%2Fconfigure%2Frule%2Fnew%3Ftemplate%3D%257B%2522name%2522%253A%2522Block%2Btraffic%2Bfrom%2BOFAC-sanctioned%2Bcountries%2522%252C%2522active%2522%253Atrue%252C%2522deion%2522%253A%2522Blocks%2Btraffic%2Bfrom%2BOFAC-sanctioned%2Bcountries%2Band%2Benforces%2Ba%2Bone-hour%2Bpersistent%2Bblock%2Bafter%2Bthe%2Bfirst%2Bviolation.%2522%252C%2522action%2522%253A%257B%2522mitigate%2522%253A%257B%2522redirect%2522%253Anull%252C%2522action%2522%253A%2522deny%2522%252C%2522rateLimit%2522%253Anull%252C%2522actionDuration%2522%253A%25221h%2522%257D%257D%252C%2522id%2522%253A%2522%2522%252C%2522conditionGroup%2522%253A%255B%257B%2522conditions%2522%253A%255B%257B%2522type%2522%253A%2522geo_country%2522%252C%2522op%2522%253A%2522inc%2522%252C%2522value%2522%253A%255B%2522SY%2522%252C%2522IR%2522%252C%2522RU%2522%252C%2522CU%2522%252C%2522KP%2522%255D%257D%255D%257D%255D%257D%26sig%3Dfe7d3b4c6189b757e95c4acbf2d631d590399bce&title=Add+Firewall+Rule+from+Template)
+
+[Vercel WAF Docs](https://vercel.com/docs/security/vercel-waf)
+
+[Other](/templates/other)
+
+[Vercel Firewall](/templates/vercel-firewall)
+
+[None](/templates/none)
+
+## Block OFAC-Sanctioned Countries
+
+This template provides a preset, customizable Vercel Firewall rule which is designed to support your compliance with US export control regulations by offering the ability to restrict access from sanctioned and embargoed regions.
+
+### Overview
+
+Identify incoming requests based on their country of origin and block access from specified OFAC-sanctioned countries. The list is not meant to be exhaustive, and may not include all sanctioned countries as of any given date. Updating and customizing the list of countries, ensuring that the firewall rule is operating as intended, and otherwise maintaining the compliance of your product and operations remains your responsibility.
+
+### Consider customization
+
+The generated Firewall rule provides a basic structure for blocking traffic from countries sanctioned by the Office of Foreign Assets Control (OFAC). Consider customizing the following parameters to suit your specific compliance needs:
+
+1. **Country List**: Update the list of countries to be blocked based on the latest government sanctions program or any countries you desire to add.
+1. **Exception Handling**: Configure exceptions for specific IP addresses or entities that require access despite country restrictions.
+
+### Persistent Action
+
+The rule includes a persistent action set to a duration of 1 hour. Any requests blocked due to persistent actions, which are activated after the first violation of the rule, are blocked before any usage is incurred.
+
+### Availability
+
+This solution can be implemented by users on all plans.
+
+### To Use
+
+To use this template, follow these steps:
+
+1. Click "Add Firewall Rule."
+1. Select your team and project.
+1. Configure the rule to block traffic from countries sanctioned by the Office of Foreign Assets Control (OFAC) as necessary.
+1. Don't forget to hit "Save," and then "Publish" to activate the rule.
+
+## Related Templates
+
+[Block Bad Bots Firewall RuleAdds a rule to your Vercel Firewall that identifies bots that you might not want requesting your projects.by▲ Vercel](/templates/other/block-bad-bots-firewall-rule)
+
+[Block WordPress URLs Firewall RuleAdds a rule to your Vercel Firewall that blocks common WordPress-related URLs.by▲ Vercel](/templates/other/block-wordpress-urls-firewall-rule)
+
+[Rate Limit API Requests Firewall RuleAdds a rule to your Vercel Firewall that rate limits API requests.by▲ Vercel](/templates/other/rate-limit-api-requests-firewall-rule)
+
+[Emergency Redirect Firewall RuleUse this template to quickly implement an emergency redirect rule with the Vercel Web Application Firewall (WAF).by▲ Vercel](/templates/other/emergency-redirect-firewall-rule)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)

@@ -1,0 +1,331 @@
+---
+title: Flags SDK with OpenFeature adapter
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/next.js/flags-sdk-openfeature
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[vercel/examples](https://github.com/vercel/examples/tree/main/flags-sdk/openfeature)
+
+# Flags SDK with OpenFeature adapter
+
+Use OpenFeature providers with the Flags SDK
+
+[Deploy](/new/clone?demo-deion=Use%20OpenFeature%20providers%20with%20the%20Flags%20SDK&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6NZAIOOPoxyPrKN3ZCVHCR%2F6b6de6a4f0503e9249f9cdf51773a043%2FFlags___launchdarkly_-_Light.png&demo-title=Flags%20SDK%20with%20OpenFeature%20adapter&demo-url=https%3A%2F%2Fflags-sdk-openfeature.vercel.app&env=FLAGS_SECRET&envDeion=The%20FLAGS_SECRET%20will%20be%20used%20by%20the%20Flags%20Explorer%20to%20securely%20overwrite%20feature%20flags.%20Must%20be%2032%20random%20bytes%2C%20base64-encoded.%20Use%20the%20generated%20value%20or%20set%20your%20own.&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fworkflow-collaboration%2Ffeature-flags%2Fsupporting-feature-flags%23flags_secret-environment-variable&project-name=openfeature-flags-sdk-example&repository-name=openfeature-flags-sdk-example&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fflags-sdk%2Fopenfeature)
+
+[View Demo](https://flags-sdk-openfeature.vercel.app)
+
+[Next.js](/templates/next.js)
+
+[Edge Config](/templates/edge-config)
+
+[Tailwind](/templates/tailwind)
+
+![Flags + OpenFeature](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6NZAIOOPoxyPrKN3ZCVHCR%2F6b6de6a4f0503e9249f9cdf51773a043%2FFlags___launchdarkly_-_Light.png&w=3840&q=75)
+
+## OpenFeature Flags SDK Example
+
+This example uses[OpenFeature](https://openfeature.dev/)for feature flags with the[Flags SDK](https://flags-sdk.dev)and the[Flags SDK OpenFeature adapter](https://flags-sdk.dev/docs/api-reference/adapters/openfeature)along with the[Flags Explorer](https://vercel.com/docs/workflow-collaboration/feature-flags/using-vercel-toolbar).
+
+### Demo
+
+[https://flags-sdk-openfeature.vercel.app/](https://flags-sdk-openfeature.vercel.app/)
+
+### How it works
+
+This demo uses two feature flags defined in code control the visibility of two banners on the page.
+Both flags are configured to show/hide each banner 50% of the time.
+
+Once you visit the page, you can see a variation of both/one/none of the banners.
+Since this example is using a stable id to identify users, you will see the same variation until you reset your id.
+
+To test different variations, you can use the Dev Tools at the bottom to reset the stable id and reload the page.
+This allows you to test different variations of the banners.
+
+If you deployed your own instance of this example you can also use the[Flags Explorer](https://vercel.com/docs/workflow-collaboration/feature-flags/using-vercel-toolbar)to test different variations by creating overrides.
+
+### Deploy this template
+
+[](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fflags-sdk%2Fopenfeature&env=FLAGS_SECRET&envDeion=The+FLAGS_SECRET+will+be+used+by+the+Flags+Explorer+to+securely+overwrite+feature+flags.+Must+be+32+random+bytes%2C+base64-encoded.+Use+the+generated+value+or+set+your+own.&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fworkflow-collaboration%2Ffeature-flags%2Fsupporting-feature-flags%23flags_secret-environment-variable&project-name=openfeature-flags-sdk-example&repository-name=openfeature-flags-sdk-example)
+
+#### Step 1: Link the project
+
+First, install the latest version of the Vercel CLI:
+
+```
+pnpm i
+-
+g vercel
+```
+
+or
+
+```
+npm i
+-
+g vercel
+```
+
+To use the Flags Explorer, you need to connect your local project to your Vercel project:
+
+```
+vercel link
+```
+
+Select the project from the list you just deployed.
+
+#### Step 2: Pull all environment variables
+
+This allows the Flags SDK and the Flags Explorer to work correctly, by getting additional metadata.
+
+```
+vercel env pull
+```
+
+#### Step 3: Install dependencies
+
+```
+pnpm install
+```
+
+or
+
+```
+npm install
+--
+legacy
+-
+peer
+-
+deps
+```
+
+#### Step 4: Run the project
+
+```
+pnpm run dev
+```
+
+or
+
+```
+npm run dev
+```
+
+[← Back to Templates](/templates)
+
+![Flags + OpenFeature](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6NZAIOOPoxyPrKN3ZCVHCR%2F6b6de6a4f0503e9249f9cdf51773a043%2FFlags___launchdarkly_-_Light.png&w=3840&q=75)
+
+[vercel/examples](https://github.com/vercel/examples/tree/main/flags-sdk/openfeature)
+
+# Flags SDK with OpenFeature adapter
+
+Use OpenFeature providers with the Flags SDK
+
+[Deploy](/new/clone?demo-deion=Use%20OpenFeature%20providers%20with%20the%20Flags%20SDK&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F6NZAIOOPoxyPrKN3ZCVHCR%2F6b6de6a4f0503e9249f9cdf51773a043%2FFlags___launchdarkly_-_Light.png&demo-title=Flags%20SDK%20with%20OpenFeature%20adapter&demo-url=https%3A%2F%2Fflags-sdk-openfeature.vercel.app&env=FLAGS_SECRET&envDeion=The%20FLAGS_SECRET%20will%20be%20used%20by%20the%20Flags%20Explorer%20to%20securely%20overwrite%20feature%20flags.%20Must%20be%2032%20random%20bytes%2C%20base64-encoded.%20Use%20the%20generated%20value%20or%20set%20your%20own.&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fworkflow-collaboration%2Ffeature-flags%2Fsupporting-feature-flags%23flags_secret-environment-variable&project-name=openfeature-flags-sdk-example&repository-name=openfeature-flags-sdk-example&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fflags-sdk%2Fopenfeature)
+
+[View Demo](https://flags-sdk-openfeature.vercel.app)
+
+[Next.js](/templates/next.js)
+
+[Edge Config](/templates/edge-config)
+
+[Tailwind](/templates/tailwind)
+
+## OpenFeature Flags SDK Example
+
+This example uses[OpenFeature](https://openfeature.dev/)for feature flags with the[Flags SDK](https://flags-sdk.dev)and the[Flags SDK OpenFeature adapter](https://flags-sdk.dev/docs/api-reference/adapters/openfeature)along with the[Flags Explorer](https://vercel.com/docs/workflow-collaboration/feature-flags/using-vercel-toolbar).
+
+### Demo
+
+[https://flags-sdk-openfeature.vercel.app/](https://flags-sdk-openfeature.vercel.app/)
+
+### How it works
+
+This demo uses two feature flags defined in code control the visibility of two banners on the page.
+Both flags are configured to show/hide each banner 50% of the time.
+
+Once you visit the page, you can see a variation of both/one/none of the banners.
+Since this example is using a stable id to identify users, you will see the same variation until you reset your id.
+
+To test different variations, you can use the Dev Tools at the bottom to reset the stable id and reload the page.
+This allows you to test different variations of the banners.
+
+If you deployed your own instance of this example you can also use the[Flags Explorer](https://vercel.com/docs/workflow-collaboration/feature-flags/using-vercel-toolbar)to test different variations by creating overrides.
+
+### Deploy this template
+
+[](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fflags-sdk%2Fopenfeature&env=FLAGS_SECRET&envDeion=The+FLAGS_SECRET+will+be+used+by+the+Flags+Explorer+to+securely+overwrite+feature+flags.+Must+be+32+random+bytes%2C+base64-encoded.+Use+the+generated+value+or+set+your+own.&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fworkflow-collaboration%2Ffeature-flags%2Fsupporting-feature-flags%23flags_secret-environment-variable&project-name=openfeature-flags-sdk-example&repository-name=openfeature-flags-sdk-example)
+
+#### Step 1: Link the project
+
+First, install the latest version of the Vercel CLI:
+
+```
+pnpm i
+-
+g vercel
+```
+
+or
+
+```
+npm i
+-
+g vercel
+```
+
+To use the Flags Explorer, you need to connect your local project to your Vercel project:
+
+```
+vercel link
+```
+
+Select the project from the list you just deployed.
+
+#### Step 2: Pull all environment variables
+
+This allows the Flags SDK and the Flags Explorer to work correctly, by getting additional metadata.
+
+```
+vercel env pull
+```
+
+#### Step 3: Install dependencies
+
+```
+pnpm install
+```
+
+or
+
+```
+npm install
+--
+legacy
+-
+peer
+-
+deps
+```
+
+#### Step 4: Run the project
+
+```
+pnpm run dev
+```
+
+or
+
+```
+npm run dev
+```
+
+## Related Templates
+
+[Statsig Experimentation with Flags SDKRun experiments on static pages with Statsig and the Flags SDKby▲ Vercel](/templates/next.js/statsig-experimentation-with-flags-sdk)
+
+[Shirt Shop — Feature Flags using Next.jsEcommerce product page example using Next.js, Flags SDK, and @vercel/toolbar to test showing free shipping and summer deal banners.by▲ Vercel](/templates/next.js/shirt-shop-feature-flags)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)

@@ -1,0 +1,334 @@
+---
+title: Admin Dashboard Template
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/new/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+1. [](/home)
+
+[← Back to Templates](/new/templates)
+
+[vercel/nextjs-postgres-nextauth-tailwindcss-template](https://github.com/vercel/nextjs-postgres-nextauth-tailwindcss-template)
+
+# Admin Dashboard Template
+
+Tailwind CSS, Postgres, and Auth set up.
+
+[Deploy](/new/clone?demo-deion=Tailwind%20CSS%2C%20Postgres%2C%20and%20Auth%20set%20up.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Ffmmsa0AREAIvMGl9PzGew%2Fc3b4fd4674140be0813c0aa21007c381%2FCleanShot_2024-07-07_at_23.45.58_2x.png&demo-title=Admin%20Dashboard%20Template&demo-url=https%3A%2F%2Fnext-admin-dash.vercel.app%2F&env=AUTH_SECRET%2CAUTH_GITHUB_ID%2CAUTH_GITHUB_SECRET&envDeion=Instructions%20on%20how%20to%20get%20these%20env%20vars%3A&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fnextjs-postgres-nextauth-tailwindcss-template%2Fblob%2Fmain%2F.env.local.example&from=templates&project-name=Admin%20Dashboard%20Template&repository-name=admin-dashboard&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnextjs-postgres-nextauth-tailwindcss-template&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
+[View Demo](https://next-admin-dash.vercel.app/)
+
+[Next.js](/templates/next.js)
+
+[Starter](/templates/starter)
+
+[Authentication](/templates/authentication)
+
+[Tailwind](/templates/tailwind)
+
+[Vercel Postgres](/templates/vercel-postgres)
+
+[NextAuth.js](/templates/nextauth.js)
+
+![Admin Dash Template](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Ffmmsa0AREAIvMGl9PzGew%2Fc3b4fd4674140be0813c0aa21007c381%2FCleanShot_2024-07-07_at_23.45.58_2x.png&w=3840&q=75)
+
+### Overview
+
+This is a starter template using the following stack:
+
+* Framework -[Next.js (App Router)](https://nextjs.org)
+* Language -[Type](https://www.typelang.org)
+* Auth -[Auth.js](https://authjs.dev)
+* Database -[Postgres](https://vercel.com/postgres)
+* Deployment -[Vercel](https://vercel.com/docs/concepts/next.js/overview)
+* Styling -[Tailwind CSS](https://tailwindcss.com)
+* Components -[Shadcn UI](https://ui.shadcn.com/)
+* Analytics -[Vercel Analytics](https://vercel.com/analytics)
+* Formatting -[Prettier](https://prettier.io)
+
+This template uses the new Next.js App Router. This includes support for enhanced layouts, colocation of components, tests, and s, component-level data fetching, and more.
+
+### Getting Started
+
+During the deployment, Vercel will prompt you to create a new Postgres database. This will add the necessary environment variables to your project.
+
+Inside the Vercel Postgres dashboard, create a table based on the schema defined in this repository.
+
+```
+CREATE
+
+TYPE
+ status
+AS
+
+ENUM
+
+(
+'active'
+,
+
+'inactive'
+,
+
+'archived'
+)
+;
+
+
+CREATE
+
+TABLE
+
+products
+
+(
+  id
+SERIAL
+
+PRIMARY
+
+KEY
+,
+  image_url
+TEXT
+
+NOT
+
+NULL
+,
+  name
+TEXT
+
+NOT
+
+NULL
+,
+  status status
+NOT
+
+NULL
+,
+  price
+NUMERIC
+(
+10
+,
+
+2
+)
+
+NOT
+
+NULL
+,
+  stock
+INTEGER
+
+NOT
+
+NULL
+,
+  available_at
+TIMESTAMP
+
+NOT
+
+NULL
+)
+;
+```
+
+Then, uncomment`app/api/seed.ts`and hit`http://localhost:3000/api/seed`to seed the database with products.
+
+Next, copy the`.env.example`file to`.env`and update the values. Follow the instructions in the`.env.example`file to set up your GitHub OAuth application.
+
+```
+npm i
+-
+g vercel
+vercel link
+vercel env pull
+```
+
+Finally, run the following commands to start the development server:
+
+```
+pnpm install
+pnpm dev
+```
+
+You should now be able to access the application at http://localhost:3000.
+
+[← Back to Templates](/new/templates)
+
+![Admin Dash Template](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Ffmmsa0AREAIvMGl9PzGew%2Fc3b4fd4674140be0813c0aa21007c381%2FCleanShot_2024-07-07_at_23.45.58_2x.png&w=3840&q=75)
+
+[vercel/nextjs-postgres-nextauth-tailwindcss-template](https://github.com/vercel/nextjs-postgres-nextauth-tailwindcss-template)
+
+# Admin Dashboard Template
+
+Tailwind CSS, Postgres, and Auth set up.
+
+[Deploy](/new/clone?demo-deion=Tailwind%20CSS%2C%20Postgres%2C%20and%20Auth%20set%20up.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2Ffmmsa0AREAIvMGl9PzGew%2Fc3b4fd4674140be0813c0aa21007c381%2FCleanShot_2024-07-07_at_23.45.58_2x.png&demo-title=Admin%20Dashboard%20Template&demo-url=https%3A%2F%2Fnext-admin-dash.vercel.app%2F&env=AUTH_SECRET%2CAUTH_GITHUB_ID%2CAUTH_GITHUB_SECRET&envDeion=Instructions%20on%20how%20to%20get%20these%20env%20vars%3A&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fnextjs-postgres-nextauth-tailwindcss-template%2Fblob%2Fmain%2F.env.local.example&from=templates&project-name=Admin%20Dashboard%20Template&repository-name=admin-dashboard&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnextjs-postgres-nextauth-tailwindcss-template&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
+[View Demo](https://next-admin-dash.vercel.app/)
+
+[Next.js](/templates/next.js)
+
+[Starter](/templates/starter)
+
+[Authentication](/templates/authentication)
+
+[Tailwind](/templates/tailwind)
+
+[Vercel Postgres](/templates/vercel-postgres)
+
+[NextAuth.js](/templates/nextauth.js)
+
+### Overview
+
+This is a starter template using the following stack:
+
+* Framework -[Next.js (App Router)](https://nextjs.org)
+* Language -[Type](https://www.typelang.org)
+* Auth -[Auth.js](https://authjs.dev)
+* Database -[Postgres](https://vercel.com/postgres)
+* Deployment -[Vercel](https://vercel.com/docs/concepts/next.js/overview)
+* Styling -[Tailwind CSS](https://tailwindcss.com)
+* Components -[Shadcn UI](https://ui.shadcn.com/)
+* Analytics -[Vercel Analytics](https://vercel.com/analytics)
+* Formatting -[Prettier](https://prettier.io)
+
+This template uses the new Next.js App Router. This includes support for enhanced layouts, colocation of components, tests, and s, component-level data fetching, and more.
+
+### Getting Started
+
+During the deployment, Vercel will prompt you to create a new Postgres database. This will add the necessary environment variables to your project.
+
+Inside the Vercel Postgres dashboard, create a table based on the schema defined in this repository.
+
+```
+CREATE
+
+TYPE
+ status
+AS
+
+ENUM
+
+(
+'active'
+,
+
+'inactive'
+,
+
+'archived'
+)
+;
+
+
+CREATE
+
+TABLE
+
+products
+
+(
+  id
+SERIAL
+
+PRIMARY
+
+KEY
+,
+  image_url
+TEXT
+
+NOT
+
+NULL
+,
+  name
+TEXT
+
+NOT
+
+NULL
+,
+  status status
+NOT
+
+NULL
+,
+  price
+NUMERIC
+(
+10
+,
+
+2
+)
+
+NOT
+
+NULL
+,
+  stock
+INTEGER
+
+NOT
+
+NULL
+,
+  available_at
+TIMESTAMP
+
+NOT
+
+NULL
+)
+;
+```
+
+Then, uncomment`app/api/seed.ts`and hit`http://localhost:3000/api/seed`to seed the database with products.
+
+Next, copy the`.env.example`file to`.env`and update the values. Follow the instructions in the`.env.example`file to set up your GitHub OAuth application.
+
+```
+npm i
+-
+g vercel
+vercel link
+vercel env pull
+```
+
+Finally, run the following commands to start the development server:
+
+```
+pnpm install
+pnpm dev
+```
+
+You should now be able to access the application at http://localhost:3000.
+
+## Related Templates
+
+[Blog Starter KitA statically generated blog example using Next.js and Markdown.by▲ Vercel](/new/templates/next.js/blog-starter-kit)
+
+[Nextra: Docs Starter KitSimple, powerful and flexible markdown-powered docs site. Built with Next.js.by▲ Vercel](/new/templates/next.js/documentation-starter-kit)
+
+[Blog (with comments)Next.js blog application with Auth0 and UpstashbyAuth0](/new/templates/next.js/blog-with-comments)
+
+[Next.js BoilerplateGet started with Next.js and React in seconds.by▲ Vercel](/new/templates/next.js/nextjs-boilerplate)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential

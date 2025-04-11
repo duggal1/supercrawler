@@ -1,0 +1,181 @@
+---
+title: Block Bad Bots Firewall Rule
+description: No description
+keywords: No keywords
+canonicalUrl: https://vercel.com/templates/other/block-bad-bots-firewall-rule
+---
+
+## Table of Contents
+
+{/* Auto-generated table of contents */}
+
+[Skip to content](#geist-skip-)
+
+* ProductsDX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* DX Platform[Previews Helping teams ship 6× faster](/products/previews)[AI Powering breakthroughs](/ai)
+* [Previews Helping teams ship 6× faster](/products/previews)
+* [AI Powering breakthroughs](/ai)
+* Managed Infrastructure[Fluid compute Servers, in serverless form](/fluid)[Rendering Fast, scalable, and reliable](/products/rendering)[Observability Trace every step](/products/observability)[Security Scale without compromising](/security)
+* [Fluid compute Servers, in serverless form](/fluid)
+* [Rendering Fast, scalable, and reliable](/products/rendering)
+* [Observability Trace every step](/products/observability)
+* [Security Scale without compromising](/security)
+* Open Source[Next.js The native Next.js platform](/frameworks/nextjs)[Turborepo Speed with Enterprise scale](/solutions/turborepo)[AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* [Next.js The native Next.js platform](/frameworks/nextjs)
+* [Turborepo Speed with Enterprise scale](/solutions/turborepo)
+* [AI SDK The AI Toolkit for Type](https://sdk.vercel.ai/)
+* SolutionsUse Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* Use Cases[AI Apps Deploy at the speed of AI](/solutions/ai-apps)[Composable Commerce Power storefronts that convert](/solutions/composable-commerce)[Marketing Sites Launch campaigns fast](/solutions/marketing-sites)[Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)[Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* [AI Apps Deploy at the speed of AI](/solutions/ai-apps)
+* [Composable Commerce Power storefronts that convert](/solutions/composable-commerce)
+* [Marketing Sites Launch campaigns fast](/solutions/marketing-sites)
+* [Multi-tenant Platforms Scale apps with one codebase](/solutions/multi-tenant-saas)
+* [Web Apps Ship features, not infrastructure](/solutions/web-apps)
+* Users[Platform Engineers Automate away repetition](/solutions/platform-engineering)[Design Engineers Deploy for every idea](/solutions/design-engineering)
+* [Platform Engineers Automate away repetition](/solutions/platform-engineering)
+* [Design Engineers Deploy for every idea](/solutions/design-engineering)
+* ResourcesTools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* Tools[Resource Center Today’s best practices](/resources)[Marketplace Extend and automate workflows](/marketplace)[Templates Jumpstart app development](/templates)[Guides Find help quickly](/guides)[Partner Finder Get help from solution partners](/partners/solution-partners)
+* [Resource Center Today’s best practices](/resources)
+* [Marketplace Extend and automate workflows](/marketplace)
+* [Templates Jumpstart app development](/templates)
+* [Guides Find help quickly](/guides)
+* [Partner Finder Get help from solution partners](/partners/solution-partners)
+* Company[Customers Trusted by the best teams](/customers)[Blog The latest posts and changes](/blog)[Changelog See what shipped](/changelog)[Press Read the latest news](/press)
+* [Customers Trusted by the best teams](/customers)
+* [Blog The latest posts and changes](/blog)
+* [Changelog See what shipped](/changelog)
+* [Press Read the latest news](/press)
+* [Enterprise](/enterprise)
+* [Docs](/docs)
+* [Pricing](/pricing)
+
+[Log In](/login)
+
+[Contact](/contact)
+
+[Sign Up](/signup)
+
+[← Back to Templates](/templates)
+
+[vercel/firewall-templates](https://github.com/vercel/firewall-templates/tree/main/bad-bot-firewall-rule)
+
+# Block Bad Bots Firewall Rule
+
+Adds a rule to your Vercel Firewall that identifies bots that you might not want requesting your projects.
+
+[Add Firewall Rule](/d?to=%2F%5Bteam%5D%2F%5Bproject%5D%2Ffirewall%2Fconfigure%2Frule%2Fnew%3Ftemplate%3D%257B%2522name%2522%253A%2522Detect%2BBad%2BBots%2522%252C%2522active%2522%253Atrue%252C%2522deion%2522%253A%2522%2522%252C%2522action%2522%253A%257B%2522mitigate%2522%253A%257B%2522redirect%2522%253Anull%252C%2522action%2522%253A%2522log%2522%252C%2522rateLimit%2522%253Anull%252C%2522actionDuration%2522%253Anull%257D%257D%252C%2522id%2522%253A%2522%2522%252C%2522conditionGroup%2522%253A%255B%257B%2522conditions%2522%253A%255B%257B%2522type%2522%253A%2522user_agent%2522%252C%2522op%2522%253A%2522re%2522%252C%2522value%2522%253A%252201h4x.com%257C360Spider%257C404checker%257C404enemy%257C80legs%257CADmantX%257CAIBOT%257CALittle%2BClient%257CASPSeek%257CAbonti%257CAboundex%257CAboundexbot%257CAcunetix%257CAdsTxtCrawlerTP%257CAfD-Verbotsverfahren%257CAhrefsBot%257CAiHitBot%257CAipbot%257CAlexibot%257CAllSubmitter%257CAlligator%257CAlphaBot%257CAnarchie%257CAnarchy%257CAnarchy99%257CAnkit%257CAnthill%257CApexoo%257CAspiegel%257CAsterias%257CAtomseobot%257CAttach%257CAwarioBot%257CAwarioRssBot%257CAwarioSmartBot%257CBBBike%257CBDCbot%257CBDFetch%257CBLEXBot%257CBackDoorBot%257CBackStreet%257CBackWeb%257CBacklink-Ceck%257CBacklinkCrawler%257CBacklinksExtendedBot%257CBadass%257CBandit%257CBarkrowler%257CBatchFTP%257CBattleztar%2BBazinga%257CBetaBot%257CBigfoot%257CBitacle%257CBlackWidow%257CBlack%2BHole%257CBlackboard%257CBlow%257CBlowFish%257CBoardreader%257CBolt%257CBotALot%257CBrandprotect%257CBrandwatch%257CBuck%257CBuddy%257CBuiltBotTough%257CBuiltWith%257CBullseye%257CBunnySlippers%257CBuzzSumo%257CBytespider%257CCATExplorador%257CCCBot%257CCODE87%257CCSHttp%257CCalculon%257CCazoodleBot%257CCegbfeieh%257CCensysInspect%257CChatGPT-User%257CCheTeam%257CCheeseBot%257CCherryPicker%257CChinaClaw%257CChlooe%257CCitoid%257CClaritybot%257CClaudeBot%257CCliqzbot%257CCloud%2Bmapping%257CCocolyzebot%257CCogentbot%257CCollector%257CCopier%257CCopyRightCheck%257CCopyscape%257CCosmos%257CCraftbot%257CCrawling%2Bat%2BHome%2BProject%257CCrazyWebCrawler%257CCrescent%257CCrunchBot%257CCurious%257CCusto%257CCyotekWebCopy%257CDBLBot%257CDIIbot%257CDSearch%257CDTS%2BAgent%257CDataCha0s%257CDatabaseDriverMysqli%257CDemon%257CDeusu%257CDevil%257CDigincore%257CDigitalPebble%257CDirbuster%257CDisco%257CDiscobot%257CDiscoverybot%257CDispatch%257CDittoSpyder%257CDnBCrawler-Analytics%257CDnyzBot%257CDomCopBot%257CDomainAppender%257CDomainCrawler%257CDomainSigmaCrawler%257CDomainStatsBot%257CDomains%2BProject%257CDotbot%257CDownload%2BWonder%257CDragonfly%257CDrip%257CECCP%252F1.0%257CEMail%2BSiphon%257CEMail%2BWolf%257CEasyDL%257CEbingbong%257CEcxi%257CEirGrabber%257CEroCrawler%257CEvil%257CExabot%257CExpress%2BWebPictures%257CExtLinksBot%257CExtractor%257CExtractorPro%257CExtreme%2BPicture%2BFinder%257CEyeNetIE%257CEzooms%257CFDM%257CFHscan%257CFacebookBot%257CFemtosearchBot%257CFimap%257CFirefox%252F7.0%257CFlashGet%257CFlunky%257CFoobot%257CFreeuploader%257CFrontPage%257CFuzz%257CFyberSpider%257CFyrebot%257CG-i-g-a-b-o-t%257CGPTBot%257CGT%253A%253AWWW%257CGalaxyBot%257CGenieo%257CGermCrawler%257CGetRight%257CGetWeb%257CGetintent%257CGigabot%257CGo%2521Zilla%257CGo-Ahead-Got-It%257CGoZilla%257CGotit%257CGrabNet%257CGrabber%257CGrafula%257CGrapeFX%257CGrapeshotCrawler%257CGridBot%257CHEADMasterSEO%257CHMView%257CHTMLparser%257CHTTP%253A%253ALite%257CHTTrack%257CHaansoft%257CHaosouSpider%257CHarvest%257CHavij%257CHeritrix%257CHloader%257CHonoluluBot%257CHumanlinks%257CHybridBot%257CIDBTE4M%257CIDBot%257CIRLbot%257CIblog%257CId-search%257CIlseBot%257CImage%2BFetch%257CImage%2BSucker%257CImagesiftBot%257CIndeedBot%257CIndy%2BLibrary%257CInfoiRobot%257CInfoTekies%257CInformation%2BSecurity%2BTeam%2BInfraSec%2BScanner%257CInfraSec%2BScanner%257CIntelliseek%257CInterGET%257CInternetMeasurement%257CInternetSeer%257CInternet%2BNinja%257CIria%257CIskanie%257CIstellaBot%257CJOC%2BWeb%2BSpider%257CJamesBOT%257CJbrofuzz%257CJennyBot%257CJetCar%257CJetty%257CJikeSpider%257CJoomla%257CJorgee%257CJustView%257CJyxobot%257CKenjin%2BSpider%257CKeybot%2BTranslation-Search-Machine%257CKeyword%2BDensity%257CKinza%257CKozmosbot%257CLNSpiderguy%257CLWP%253A%253ASimple%257CLanshanbot%257CLarbin%257CLeap%257CLeechFTP%257CLeechGet%257CLexiBot%257CLftp%257CLibWeb%257CLibwhisker%257CLieBaoFast%257CLightspeedsystems%257CLikse%257CLinkScan%257CLinkWalker%257CLinkbot%257CLinkextractorPro%257CLinkpadBot%257CLinksManager%257CLinqiaMetadataDownloaderBot%257CLinqiaRSSBot%257CLinqiaScrapeBot%257CLipperhey%257CLipperhey%2BSpider%257CLitemage_walker%257CLmspider%257CLtx71%257CMFC_Tear_Sample%257CMIDown%2Btool%257CMIIxpc%257CMJ12bot%257CMQQBrowser%257CMSFrontPage%257CMSIECrawler%257CMTRobot%257CMag-Net%257CMagnet%257CMail.RU_Bot%257CMajestic-SEO%257CMajestic12%257CMajestic%2BSEO%257CMarkMonitor%257CMarkWatch%257CMass%2BDownloader%257CMasscan%257CMata%2BHari%257CMauiBot%257CMb2345Browser%257CMeanPath%2BBot%257CMeanpathbot%257CMediatoolkitbot%257CMegaIndex.ru%257CMetauri%257CMicroMessenger%257CMicrosoft%2BData%2BAccess%257CMicrosoft%2BURL%2BControl%257CMinefield%257CMister%2BPiX%257CMoblie%2BSafari%257CMojeek%257CMojolicious%257CMolokaiBot%257CMorfeus%2BFucking%2BScanner%257CMozlila%257CMr.4x3%257CMsrabot%257CMusobot%257CNICErsPRO%257CNPbot%257CName%2BIntelligence%257CNameprotect%257Croad%257CNearSite%257CNeedle%257CNessus%257CNetAnts%257CNetLyzer%257CNetMechanic%257CNetSpider%257CNetZIP%257CNet%2BVampire%257CNetcraft%257CNettrack%257CNetvibes%257CNextGenSearchBot%257CNibbler%257CNiki-bot%257CNikto%257CNimbleCrawler%257CNimbostratus%257CNinja%257CNmap%257CNuclei%257CNutch%257COctopus%257COffline%2BExplorer%257COffline%2Bigator%257COnCrawl%257COpenLinkProfiler%257COpenVAS%257COpenfind%257COpenvas%257COrangeBot%257COrangeSpider%257COutclicksBot%257COutfoxBot%257CPECL%253A%253AHTTP%257CPHPCrawl%257CPOE-Component-Client-HTTP%257CPageAnalyzer%257CPageGrabber%257CPageScorer%257CPageThing.com%257CPage%2BAnalyzer%257CPandalytics%257CPanscient%257CPapa%2BFoto%257CPavuk%257CPeoplePal%257CPetalbot%257CPi-Monster%257CPicscout%257CPicsearch%257CPictureFinder%257CPiepmatz%257CPimonster%257CPixray%257CPleaseCrawl%257CPockey%257CProPowerBot%257CProWebWalker%257CProbethenet%257CProximic%257CPsbot%257CPu_iN%257CPump%257CPxBroker%257CPyCurl%257CQueryN%2BMetasearch%257CQuick-Crawler%257CRSSingBot%257CRainbot%257CRankActive%257CRankActiveLinkBot%257CRankFlex%257CRankingBot%257CRankingBot2%257CRankivabot%257CRankurBot%257CRe-re%257CReGet%257CRealDownload%257CReaper%257CRebelMouse%257CRecorder%257CRedesScrapy%257CRepoMonkey%257CRipper%257CRocketCrawler%257CRogerbot%257CSBIder%257CSEOkicks%257CSEOkicks-Robot%257CSEOlyt%257CSEOlyticsCrawler%257CSEOprofiler%257CSEOstats%257CSISTRIX%257CSMTBot%257CSalesIntelligent%257CScanAlert%257CScanbot%257CScoutJet%257CScrapy%257CScreaming%257CScreenerBot%257CScrepyBot%257CSearchestate%257CSearchmetricsBot%257CSeekport%257CSeekportBot%257CSemanticJuice%257CSemrush%257CSemrushBot%257CSentiBot%257CSenutoBot%257CSeoSiteCheckup%257CSeobilityBot%257CSeomoz%257CShodan%257CSiphon%257CSiteCheckerBotCrawler%257CSiteExplorer%257CSiteLockSpider%257CSiteSnagger%257CSiteSucker%257CSite%2BSucker%257CSitebeam%257CSiteimprove%257CSitevigil%257CSlySearch%257CSmartDownload%257CSnake%257CSnapbot%257CSnoopy%257CSocialRankIOBot%257CSociscraper%257CSogou%2Bweb%2Bspider%257CSosospider%257CSottopop%257CSpaceBison%257CSpammen%257CSpankBot%257CSpanner%257CSpbot%257CSpider_Bot%257CSpider_Bot%252F3.0%257CSpinn3r%257CSputnikBot%257CSqlmap%257CSqlworm%257CSqworm%257CSteeler%257CStripper%257CSucker%257CSucuri%257CSuperBot%257CSuperHTTP%257CSurfbot%257CSurveyBot%257CSuzuran%257CSwiftbot%257CSzukacz%257CT0PHackTeam%257CT8Abot%257CTeleport%257CTeleportPro%257CTelesoft%257CTelesphoreo%257CTelesphorep%257CTheNomad%257CThe%2BIntraformant%257CThumbor%257CTightTwatBot%257CTinyTestBot%257CTitan%257CToata%257CToweyabot%257CTracemyfile%257CTrendiction%257CTrendictionbot%257CTrue_Robot%257CTuringos%257CTurnitin%257CTurnitinBot%257CTwengaBot%257CTwice%257CTyphoeus%257CURLy.Warning%257CURLy%2BWarning%257CUnisterBot%257CUpflow%257CV-BOT%257CVB%2BProject%257CVCI%257CVacuum%257CVagabondo%257CVelenPublicWebCrawler%257CVeriCiteCrawler%257CVidibleScraper%257CVirusdie%257CVoidEYE%257CVoil%257CVoltron%257CWASALive-Bot%257CWBSearchBot%257CWEBDAV%257CWISENutbot%257CWPScan%257CWWW-Collector-E%257CWWW-Mechanize%257CWWW%253A%253AMechanize%257CWWWOFFLE%257CWallpapers%257CWallpapers%252F3.0%257CWallpapersHD%257CWeSEE%257CWebAuto%257CWebBandit%257CWebCollage%257CWebCopier%257CWebEnhancer%257CWebFetch%257CWebFuck%257CWebGo%2BIS%257CWebImageCollector%257CWebLeacher%257CWebPix%257CWebReaper%257CWebSauger%257CWebStripper%257CWebSucker%257CWebWhacker%257CWebZIP%257CWeb%2BAuto%257CWeb%2BCollage%257CWeb%2BEnhancer%257CWeb%2BFetch%257CWeb%2BFuck%257CWeb%2BPix%257CWeb%2BSauger%257CWeb%2BSucker%257CWebalta%257CWebmasterWorldForumBot%257CWebshag%257CWebsiteExtractor%257CWebsiteQuester%257CWebsite%2BQuester%257CWebster%257CWhack%257CWhacker%257CWhatweb%257CWho.is%2BBot%257CWidow%257CWinHTTrack%257CWiseGuys%2BRobot%257CWonderbot%257CWoobot%257CWotbox%257CWprecon%257CXaldon%2BWebSpider%257CXaldon_WebSpider%257CXenu%257CYaK%257CYoudaoBot%257CZade%257CZauba%257CZermelo%257CZeus%257CZitebot%257CZmEu%257CZoomBot%257CZoominfoBot%257CZumBot%257CZyBorg%257Cadscanner%257Canthropic-ai%257Carchive.org_bot%257Carquivo-web-crawler%257Carquivo.pt%257Cautoemailspider%257Cawario.com%257Cbacklink-check%257Ccah.io.community%257Ccheck1.exe%257Cclark-crawler%257Ccoccocbot%257Ccognitiveseo%257Ccohere-ai%257Ccom.plumanalytics%257Ccrawl.sogou.com%257Ccrawler.feedback%257Ccrawler4j%257Cdataforseo.com%257Cdataforseobot%257Cdemandbase-bot%257Cdomainsproject.org%257CeCatch%257Cevc-batch%257Cfacebookscraper%257Cgopher%257Cheritrix%257Cimagesift.com%257Cinstabid%257CinternetVista%2Bmonitor%257Cips-agent%257Cisitwp.com%257Ciubenda-radar%257Clinkdexbot%257Clinkfluence%257Clwp-request%257Clwp-trivial%257Cmagpie-crawler%257Cmeanpathbot%257Cmediawords%257Cmuhstik-scan%257CnetEstate%2BNE%2BCrawler%257CoBot%257Comgili%257Copenai%257Copenai.com%257Cpage%2Bscorer%257CpcBrowser%257Cplumanalytics%257Cpolaris%2Bversion%257Cprobe-image-size%257Cripz%257Cs1z.ru%257Csatoristudio.net%257Cscalaj-http%257Cscan.lol%257Cseobility%257Cseocompany.store%257Cseoscanners%257Cseostar%257Cserpstatbot%257Csexsearcher%257Csitechecker.pro%257Csiteripz%257Csogouspider%257Csp_auditbot%257Cspyfu%257Csysscan%257CtAkeOut%257Ctrendiction.com%257Ctrendiction.de%257Cubermetrics-technologies.com%257Cvoyagerx.com%257Cwebgains-bot%257Cwebmeup-crawler%257Cwebpros.com%257Cwebprosbot%257Cx09Mozilla%257Cx22Mozilla%257Cxpymep1.exe%257Czauba.io%257Czgrab%2522%257D%255D%257D%255D%257D%26sig%3Db0b8a83044ae2d1c72c9647a0c93b76bff3d8f8f&title=Add+Firewall+Rule+from+Template)
+
+[Vercel WAF Docs](https://vercel.com/docs/security/vercel-waf)
+
+[Other](/templates/other)
+
+[Vercel Firewall](/templates/vercel-firewall)
+
+[None](/templates/none)
+
+![block-bad-bots-firewall-rule-sized](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F5Huj1RihOh76uV06LydJY4%2F1d7cb53082dd68f5249a1e5193f351a7%2Fblock-bad-bots-firewall-rule-sized.png&w=3840&q=75)
+
+## Block Bad Bots Firewall Rule
+
+A firewall rule that identifies bots that you might not want requesting your projects.
+
+The rule defaults to the "log action". Set to "Deny" to actually block these bots.
+
+### Consider customization
+
+The generated firewall rule blocks a multitude of bots. Consider customizing the list to your need.
+
+### Attribution
+
+This template is based on the[Nginx Bad Bot Blocker](https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker)project.
+
+[← Back to Templates](/templates)
+
+![block-bad-bots-firewall-rule-sized](/_next/image?url=https%3A%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F5Huj1RihOh76uV06LydJY4%2F1d7cb53082dd68f5249a1e5193f351a7%2Fblock-bad-bots-firewall-rule-sized.png&w=3840&q=75)
+
+[vercel/firewall-templates](https://github.com/vercel/firewall-templates/tree/main/bad-bot-firewall-rule)
+
+# Block Bad Bots Firewall Rule
+
+Adds a rule to your Vercel Firewall that identifies bots that you might not want requesting your projects.
+
+[Add Firewall Rule](/d?to=%2F%5Bteam%5D%2F%5Bproject%5D%2Ffirewall%2Fconfigure%2Frule%2Fnew%3Ftemplate%3D%257B%2522name%2522%253A%2522Detect%2BBad%2BBots%2522%252C%2522active%2522%253Atrue%252C%2522deion%2522%253A%2522%2522%252C%2522action%2522%253A%257B%2522mitigate%2522%253A%257B%2522redirect%2522%253Anull%252C%2522action%2522%253A%2522log%2522%252C%2522rateLimit%2522%253Anull%252C%2522actionDuration%2522%253Anull%257D%257D%252C%2522id%2522%253A%2522%2522%252C%2522conditionGroup%2522%253A%255B%257B%2522conditions%2522%253A%255B%257B%2522type%2522%253A%2522user_agent%2522%252C%2522op%2522%253A%2522re%2522%252C%2522value%2522%253A%252201h4x.com%257C360Spider%257C404checker%257C404enemy%257C80legs%257CADmantX%257CAIBOT%257CALittle%2BClient%257CASPSeek%257CAbonti%257CAboundex%257CAboundexbot%257CAcunetix%257CAdsTxtCrawlerTP%257CAfD-Verbotsverfahren%257CAhrefsBot%257CAiHitBot%257CAipbot%257CAlexibot%257CAllSubmitter%257CAlligator%257CAlphaBot%257CAnarchie%257CAnarchy%257CAnarchy99%257CAnkit%257CAnthill%257CApexoo%257CAspiegel%257CAsterias%257CAtomseobot%257CAttach%257CAwarioBot%257CAwarioRssBot%257CAwarioSmartBot%257CBBBike%257CBDCbot%257CBDFetch%257CBLEXBot%257CBackDoorBot%257CBackStreet%257CBackWeb%257CBacklink-Ceck%257CBacklinkCrawler%257CBacklinksExtendedBot%257CBadass%257CBandit%257CBarkrowler%257CBatchFTP%257CBattleztar%2BBazinga%257CBetaBot%257CBigfoot%257CBitacle%257CBlackWidow%257CBlack%2BHole%257CBlackboard%257CBlow%257CBlowFish%257CBoardreader%257CBolt%257CBotALot%257CBrandprotect%257CBrandwatch%257CBuck%257CBuddy%257CBuiltBotTough%257CBuiltWith%257CBullseye%257CBunnySlippers%257CBuzzSumo%257CBytespider%257CCATExplorador%257CCCBot%257CCODE87%257CCSHttp%257CCalculon%257CCazoodleBot%257CCegbfeieh%257CCensysInspect%257CChatGPT-User%257CCheTeam%257CCheeseBot%257CCherryPicker%257CChinaClaw%257CChlooe%257CCitoid%257CClaritybot%257CClaudeBot%257CCliqzbot%257CCloud%2Bmapping%257CCocolyzebot%257CCogentbot%257CCollector%257CCopier%257CCopyRightCheck%257CCopyscape%257CCosmos%257CCraftbot%257CCrawling%2Bat%2BHome%2BProject%257CCrazyWebCrawler%257CCrescent%257CCrunchBot%257CCurious%257CCusto%257CCyotekWebCopy%257CDBLBot%257CDIIbot%257CDSearch%257CDTS%2BAgent%257CDataCha0s%257CDatabaseDriverMysqli%257CDemon%257CDeusu%257CDevil%257CDigincore%257CDigitalPebble%257CDirbuster%257CDisco%257CDiscobot%257CDiscoverybot%257CDispatch%257CDittoSpyder%257CDnBCrawler-Analytics%257CDnyzBot%257CDomCopBot%257CDomainAppender%257CDomainCrawler%257CDomainSigmaCrawler%257CDomainStatsBot%257CDomains%2BProject%257CDotbot%257CDownload%2BWonder%257CDragonfly%257CDrip%257CECCP%252F1.0%257CEMail%2BSiphon%257CEMail%2BWolf%257CEasyDL%257CEbingbong%257CEcxi%257CEirGrabber%257CEroCrawler%257CEvil%257CExabot%257CExpress%2BWebPictures%257CExtLinksBot%257CExtractor%257CExtractorPro%257CExtreme%2BPicture%2BFinder%257CEyeNetIE%257CEzooms%257CFDM%257CFHscan%257CFacebookBot%257CFemtosearchBot%257CFimap%257CFirefox%252F7.0%257CFlashGet%257CFlunky%257CFoobot%257CFreeuploader%257CFrontPage%257CFuzz%257CFyberSpider%257CFyrebot%257CG-i-g-a-b-o-t%257CGPTBot%257CGT%253A%253AWWW%257CGalaxyBot%257CGenieo%257CGermCrawler%257CGetRight%257CGetWeb%257CGetintent%257CGigabot%257CGo%2521Zilla%257CGo-Ahead-Got-It%257CGoZilla%257CGotit%257CGrabNet%257CGrabber%257CGrafula%257CGrapeFX%257CGrapeshotCrawler%257CGridBot%257CHEADMasterSEO%257CHMView%257CHTMLparser%257CHTTP%253A%253ALite%257CHTTrack%257CHaansoft%257CHaosouSpider%257CHarvest%257CHavij%257CHeritrix%257CHloader%257CHonoluluBot%257CHumanlinks%257CHybridBot%257CIDBTE4M%257CIDBot%257CIRLbot%257CIblog%257CId-search%257CIlseBot%257CImage%2BFetch%257CImage%2BSucker%257CImagesiftBot%257CIndeedBot%257CIndy%2BLibrary%257CInfoiRobot%257CInfoTekies%257CInformation%2BSecurity%2BTeam%2BInfraSec%2BScanner%257CInfraSec%2BScanner%257CIntelliseek%257CInterGET%257CInternetMeasurement%257CInternetSeer%257CInternet%2BNinja%257CIria%257CIskanie%257CIstellaBot%257CJOC%2BWeb%2BSpider%257CJamesBOT%257CJbrofuzz%257CJennyBot%257CJetCar%257CJetty%257CJikeSpider%257CJoomla%257CJorgee%257CJustView%257CJyxobot%257CKenjin%2BSpider%257CKeybot%2BTranslation-Search-Machine%257CKeyword%2BDensity%257CKinza%257CKozmosbot%257CLNSpiderguy%257CLWP%253A%253ASimple%257CLanshanbot%257CLarbin%257CLeap%257CLeechFTP%257CLeechGet%257CLexiBot%257CLftp%257CLibWeb%257CLibwhisker%257CLieBaoFast%257CLightspeedsystems%257CLikse%257CLinkScan%257CLinkWalker%257CLinkbot%257CLinkextractorPro%257CLinkpadBot%257CLinksManager%257CLinqiaMetadataDownloaderBot%257CLinqiaRSSBot%257CLinqiaScrapeBot%257CLipperhey%257CLipperhey%2BSpider%257CLitemage_walker%257CLmspider%257CLtx71%257CMFC_Tear_Sample%257CMIDown%2Btool%257CMIIxpc%257CMJ12bot%257CMQQBrowser%257CMSFrontPage%257CMSIECrawler%257CMTRobot%257CMag-Net%257CMagnet%257CMail.RU_Bot%257CMajestic-SEO%257CMajestic12%257CMajestic%2BSEO%257CMarkMonitor%257CMarkWatch%257CMass%2BDownloader%257CMasscan%257CMata%2BHari%257CMauiBot%257CMb2345Browser%257CMeanPath%2BBot%257CMeanpathbot%257CMediatoolkitbot%257CMegaIndex.ru%257CMetauri%257CMicroMessenger%257CMicrosoft%2BData%2BAccess%257CMicrosoft%2BURL%2BControl%257CMinefield%257CMister%2BPiX%257CMoblie%2BSafari%257CMojeek%257CMojolicious%257CMolokaiBot%257CMorfeus%2BFucking%2BScanner%257CMozlila%257CMr.4x3%257CMsrabot%257CMusobot%257CNICErsPRO%257CNPbot%257CName%2BIntelligence%257CNameprotect%257Croad%257CNearSite%257CNeedle%257CNessus%257CNetAnts%257CNetLyzer%257CNetMechanic%257CNetSpider%257CNetZIP%257CNet%2BVampire%257CNetcraft%257CNettrack%257CNetvibes%257CNextGenSearchBot%257CNibbler%257CNiki-bot%257CNikto%257CNimbleCrawler%257CNimbostratus%257CNinja%257CNmap%257CNuclei%257CNutch%257COctopus%257COffline%2BExplorer%257COffline%2Bigator%257COnCrawl%257COpenLinkProfiler%257COpenVAS%257COpenfind%257COpenvas%257COrangeBot%257COrangeSpider%257COutclicksBot%257COutfoxBot%257CPECL%253A%253AHTTP%257CPHPCrawl%257CPOE-Component-Client-HTTP%257CPageAnalyzer%257CPageGrabber%257CPageScorer%257CPageThing.com%257CPage%2BAnalyzer%257CPandalytics%257CPanscient%257CPapa%2BFoto%257CPavuk%257CPeoplePal%257CPetalbot%257CPi-Monster%257CPicscout%257CPicsearch%257CPictureFinder%257CPiepmatz%257CPimonster%257CPixray%257CPleaseCrawl%257CPockey%257CProPowerBot%257CProWebWalker%257CProbethenet%257CProximic%257CPsbot%257CPu_iN%257CPump%257CPxBroker%257CPyCurl%257CQueryN%2BMetasearch%257CQuick-Crawler%257CRSSingBot%257CRainbot%257CRankActive%257CRankActiveLinkBot%257CRankFlex%257CRankingBot%257CRankingBot2%257CRankivabot%257CRankurBot%257CRe-re%257CReGet%257CRealDownload%257CReaper%257CRebelMouse%257CRecorder%257CRedesScrapy%257CRepoMonkey%257CRipper%257CRocketCrawler%257CRogerbot%257CSBIder%257CSEOkicks%257CSEOkicks-Robot%257CSEOlyt%257CSEOlyticsCrawler%257CSEOprofiler%257CSEOstats%257CSISTRIX%257CSMTBot%257CSalesIntelligent%257CScanAlert%257CScanbot%257CScoutJet%257CScrapy%257CScreaming%257CScreenerBot%257CScrepyBot%257CSearchestate%257CSearchmetricsBot%257CSeekport%257CSeekportBot%257CSemanticJuice%257CSemrush%257CSemrushBot%257CSentiBot%257CSenutoBot%257CSeoSiteCheckup%257CSeobilityBot%257CSeomoz%257CShodan%257CSiphon%257CSiteCheckerBotCrawler%257CSiteExplorer%257CSiteLockSpider%257CSiteSnagger%257CSiteSucker%257CSite%2BSucker%257CSitebeam%257CSiteimprove%257CSitevigil%257CSlySearch%257CSmartDownload%257CSnake%257CSnapbot%257CSnoopy%257CSocialRankIOBot%257CSociscraper%257CSogou%2Bweb%2Bspider%257CSosospider%257CSottopop%257CSpaceBison%257CSpammen%257CSpankBot%257CSpanner%257CSpbot%257CSpider_Bot%257CSpider_Bot%252F3.0%257CSpinn3r%257CSputnikBot%257CSqlmap%257CSqlworm%257CSqworm%257CSteeler%257CStripper%257CSucker%257CSucuri%257CSuperBot%257CSuperHTTP%257CSurfbot%257CSurveyBot%257CSuzuran%257CSwiftbot%257CSzukacz%257CT0PHackTeam%257CT8Abot%257CTeleport%257CTeleportPro%257CTelesoft%257CTelesphoreo%257CTelesphorep%257CTheNomad%257CThe%2BIntraformant%257CThumbor%257CTightTwatBot%257CTinyTestBot%257CTitan%257CToata%257CToweyabot%257CTracemyfile%257CTrendiction%257CTrendictionbot%257CTrue_Robot%257CTuringos%257CTurnitin%257CTurnitinBot%257CTwengaBot%257CTwice%257CTyphoeus%257CURLy.Warning%257CURLy%2BWarning%257CUnisterBot%257CUpflow%257CV-BOT%257CVB%2BProject%257CVCI%257CVacuum%257CVagabondo%257CVelenPublicWebCrawler%257CVeriCiteCrawler%257CVidibleScraper%257CVirusdie%257CVoidEYE%257CVoil%257CVoltron%257CWASALive-Bot%257CWBSearchBot%257CWEBDAV%257CWISENutbot%257CWPScan%257CWWW-Collector-E%257CWWW-Mechanize%257CWWW%253A%253AMechanize%257CWWWOFFLE%257CWallpapers%257CWallpapers%252F3.0%257CWallpapersHD%257CWeSEE%257CWebAuto%257CWebBandit%257CWebCollage%257CWebCopier%257CWebEnhancer%257CWebFetch%257CWebFuck%257CWebGo%2BIS%257CWebImageCollector%257CWebLeacher%257CWebPix%257CWebReaper%257CWebSauger%257CWebStripper%257CWebSucker%257CWebWhacker%257CWebZIP%257CWeb%2BAuto%257CWeb%2BCollage%257CWeb%2BEnhancer%257CWeb%2BFetch%257CWeb%2BFuck%257CWeb%2BPix%257CWeb%2BSauger%257CWeb%2BSucker%257CWebalta%257CWebmasterWorldForumBot%257CWebshag%257CWebsiteExtractor%257CWebsiteQuester%257CWebsite%2BQuester%257CWebster%257CWhack%257CWhacker%257CWhatweb%257CWho.is%2BBot%257CWidow%257CWinHTTrack%257CWiseGuys%2BRobot%257CWonderbot%257CWoobot%257CWotbox%257CWprecon%257CXaldon%2BWebSpider%257CXaldon_WebSpider%257CXenu%257CYaK%257CYoudaoBot%257CZade%257CZauba%257CZermelo%257CZeus%257CZitebot%257CZmEu%257CZoomBot%257CZoominfoBot%257CZumBot%257CZyBorg%257Cadscanner%257Canthropic-ai%257Carchive.org_bot%257Carquivo-web-crawler%257Carquivo.pt%257Cautoemailspider%257Cawario.com%257Cbacklink-check%257Ccah.io.community%257Ccheck1.exe%257Cclark-crawler%257Ccoccocbot%257Ccognitiveseo%257Ccohere-ai%257Ccom.plumanalytics%257Ccrawl.sogou.com%257Ccrawler.feedback%257Ccrawler4j%257Cdataforseo.com%257Cdataforseobot%257Cdemandbase-bot%257Cdomainsproject.org%257CeCatch%257Cevc-batch%257Cfacebookscraper%257Cgopher%257Cheritrix%257Cimagesift.com%257Cinstabid%257CinternetVista%2Bmonitor%257Cips-agent%257Cisitwp.com%257Ciubenda-radar%257Clinkdexbot%257Clinkfluence%257Clwp-request%257Clwp-trivial%257Cmagpie-crawler%257Cmeanpathbot%257Cmediawords%257Cmuhstik-scan%257CnetEstate%2BNE%2BCrawler%257CoBot%257Comgili%257Copenai%257Copenai.com%257Cpage%2Bscorer%257CpcBrowser%257Cplumanalytics%257Cpolaris%2Bversion%257Cprobe-image-size%257Cripz%257Cs1z.ru%257Csatoristudio.net%257Cscalaj-http%257Cscan.lol%257Cseobility%257Cseocompany.store%257Cseoscanners%257Cseostar%257Cserpstatbot%257Csexsearcher%257Csitechecker.pro%257Csiteripz%257Csogouspider%257Csp_auditbot%257Cspyfu%257Csysscan%257CtAkeOut%257Ctrendiction.com%257Ctrendiction.de%257Cubermetrics-technologies.com%257Cvoyagerx.com%257Cwebgains-bot%257Cwebmeup-crawler%257Cwebpros.com%257Cwebprosbot%257Cx09Mozilla%257Cx22Mozilla%257Cxpymep1.exe%257Czauba.io%257Czgrab%2522%257D%255D%257D%255D%257D%26sig%3Db0b8a83044ae2d1c72c9647a0c93b76bff3d8f8f&title=Add+Firewall+Rule+from+Template)
+
+[Vercel WAF Docs](https://vercel.com/docs/security/vercel-waf)
+
+[Other](/templates/other)
+
+[Vercel Firewall](/templates/vercel-firewall)
+
+[None](/templates/none)
+
+## Block Bad Bots Firewall Rule
+
+A firewall rule that identifies bots that you might not want requesting your projects.
+
+The rule defaults to the "log action". Set to "Deny" to actually block these bots.
+
+### Consider customization
+
+The generated firewall rule blocks a multitude of bots. Consider customizing the list to your need.
+
+### Attribution
+
+This template is based on the[Nginx Bad Bot Blocker](https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker)project.
+
+## Related Templates
+
+[Block WordPress URLs Firewall RuleAdds a rule to your Vercel Firewall that blocks common WordPress-related URLs.by▲ Vercel](/templates/other/block-wordpress-urls-firewall-rule)
+
+[Block AI Bots Firewall RuleAdds a rule to your Vercel Firewall that detects common AI Bots.by▲ Vercel](/templates/other/block-ai-bots-firewall-rule)
+
+## Unleash New Possibilities
+
+Deploy your app on Vercel and unlock its full potential
+
+## Products
+
+* [AI](/ai)
+* [Enterprise](/enterprise)
+* [Fluid Compute](/fluid)
+* [Next.js](/solutions/nextjs)
+* [Observability](/products/observability)
+* [Previews](/products/previews)
+* [Rendering](/products/rendering)
+* [Security](/security)
+* [Turbo](/solutions/turborepo)
+* [v0](https://v0.dev/)
+
+## Resources
+
+* [Community](https://community.vercel.com/)
+* [Docs](/docs)
+* [Guides](/guides)
+* [Help](/help)
+* [Integrations](/integrations)
+* [Pricing](/pricing)
+* [Resources](/resources)
+* [Solution Partners](/partners/solution-partners)
+* [Templates](/templates)
+
+## Company
+
+* [About](/about)
+* [Blog](/blog)
+* [Careers](/careers)
+* [Changelog](/changelog)
+* [Contact Us](/contact)
+* [Customers](/customers)
+* [Partners](/partners)
+* [Privacy Policy](/legal/privacy-policy)
+* Legal
+
+## Social
+
+* [GitHub](https://github.com/vercel)
+* [LinkedIn](https://linkedin.com/company/vercel)
+* [Twitter](https://x.com/vercel)
+* [YouTube](https://youtube.com/@VercelHQ)
+
+[Loading status…](https://vercel-status.com)
