@@ -806,7 +806,8 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
     info!("[REQUEST BODY] {}", request_json);
     state.logs.lock().await.push(format!("[REQUEST BODY] {}", request_json));
     
-    let start_time = Instant::now();
+    // Track overall request timing
+    let overall_start_time = Instant::now();
     
     // Get API key from environment with better error handling
     let api_key = get_api_key();
@@ -843,6 +844,9 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
     state.logs.lock().await.push(format!("[VALIDATED PARAMS] Query: {}, MaxUrls: {}, FirecrawlDepth: {}, CrawlDepth: {}, TimeLimit: {}", 
                                        req.query, max_urls, firecrawl_depth, crawl_depth, time_limit));
     
+    // Track Firecrawl API timing
+    let firecrawl_start_time = Instant::now();
+    
     // First, get URLs from Deep Research API
     let deep_research_result = fetch_deep_research_urls(
         &state.client,
@@ -852,6 +856,11 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
         firecrawl_depth,
         &api_key,
     ).await;
+    
+    // Calculate Firecrawl time
+    let firecrawl_elapsed = firecrawl_start_time.elapsed();
+    info!("[FIRECRAWL TIMING] ⏱️ Firecrawl API took {:.2}s", firecrawl_elapsed.as_secs_f64());
+    state.logs.lock().await.push(format!("[FIRECRAWL TIMING] ⏱️ Firecrawl API took {:.2}s", firecrawl_elapsed.as_secs_f64()));
 
     let urls = match deep_research_result {
         Ok(urls) => {
@@ -867,7 +876,11 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
             
             return HttpResponse::InternalServerError().json(json!({
                 "error": msg,
-                "logs": state.logs.lock().await.clone()
+                "logs": state.logs.lock().await.clone(),
+                "timings": {
+                    "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
+                    "total_seconds": overall_start_time.elapsed().as_secs_f64()
+                }
             }));
         }
     };
@@ -879,10 +892,17 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
         
         return HttpResponse::NotFound().json(json!({
             "message": "No URLs found to crawl",
-            "logs": state.logs.lock().await.clone()
+            "logs": state.logs.lock().await.clone(),
+            "timings": {
+                "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
+                "total_seconds": overall_start_time.elapsed().as_secs_f64()
+            }
         }));
     }
 
+    // Track MDX crawler timing
+    let mdx_crawler_start_time = Instant::now();
+    
     // Process URLs in parallel with optimized concurrency
     info!("[CRAWL CONFIG] CrawlDepth: {}, FirecrawlDepth: {}, URLs to process: {}", 
           crawl_depth, firecrawl_depth, urls.len());
@@ -959,15 +979,35 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
         }
     }
 
-    let elapsed = start_time.elapsed();
+    // Now at the end of the function, update the response to include timing information:
+    let mdx_crawler_elapsed = mdx_crawler_start_time.elapsed();
+    let overall_elapsed = overall_start_time.elapsed();
+    
+    info!("[MDX CRAWLER TIMING] ⏱️ MDX crawler took {:.2}s for {} URLs at depth {}", 
+          mdx_crawler_elapsed.as_secs_f64(), successful_urls.len(), crawl_depth);
+    state.logs.lock().await.push(format!("[MDX CRAWLER TIMING] ⏱️ MDX crawler took {:.2}s for {} URLs at depth {}", 
+                                        mdx_crawler_elapsed.as_secs_f64(), successful_urls.len(), crawl_depth));
+    
+    info!("[TOTAL TIMING] ⏱️ Total processing time: {:.2}s", overall_elapsed.as_secs_f64());
+    state.logs.lock().await.push(format!("[TOTAL TIMING] ⏱️ Total processing time: {:.2}s", overall_elapsed.as_secs_f64()));
+    
     let final_logs = state.logs.lock().await.clone();
+    
+    let timings = json!({
+        "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
+        "mdx_crawler_seconds": mdx_crawler_elapsed.as_secs_f64(),
+        "total_seconds": overall_elapsed.as_secs_f64(),
+        "urls_per_second": successful_urls.len() as f64 / mdx_crawler_elapsed.as_secs_f64(),
+        "crawl_depth": crawl_depth,
+        "firecrawl_depth": firecrawl_depth
+    });
     
     let response = json!({
         "message": format!("🎉 Processed {} URLs out of {} in {:.2} seconds", 
-                          successful_urls.len(), urls.len(), elapsed.as_secs_f64()),
+                          successful_urls.len(), urls.len(), overall_elapsed.as_secs_f64()),
         "processed_urls": successful_urls,
         "original_urls": urls,
-        "elapsed_seconds": elapsed.as_secs_f64(),
+        "timings": timings,
         "logs": final_logs
     });
 
