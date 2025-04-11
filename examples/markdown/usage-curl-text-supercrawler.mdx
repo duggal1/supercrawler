@@ -1,0 +1,98 @@
+## Basic Usage Examples for `/supercrawler` Endpoint
+
+
+This guide shows how to use the `/supercrawler` endpoint for various crawling needs — from a basic keyword search to a full-depth crawl with custom limits.
+
+
+
+
+# 1. Basic usage with defaults  
+(Default: `firecrawl_depth=1`, `crawl_depth=0`, `max_urls=20`, `time_limit=600`)
+
+Use this when you want to quickly fetch content based on a search query without tweaking any crawl settings.
+
+- **firecrawl_depth=1**: Will fetch the first layer of pages from the search engine.
+- **crawl_depth=0**: Will not follow any internal links inside the pages fetched.
+- **max_urls=20**: Limits the total number of URLs fetched to 20.
+- **time_limit=600**: Maximum time for the operation is 600 seconds (10 minutes).
+
+
+##
+```bash
+curl -X POST http://localhost:8080/supercrawler \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Machine learning for beginners"
+  }'
+```
+
+---
+
+### 2. Custom depths  
+(`firecrawl_depth=3`, `crawl_depth=2`)
+
+This is useful when you want to go deeper into the web by following both search engine results and internal links within those pages.
+
+- **firecrawl_depth=3**: Will explore search engine results up to 3 levels deep.
+- **crawl_depth=2**: Once a page is fetched, the crawler will follow internal links up to 2 levels deep.
+- Ideal for when you're looking for richer content or broader context around a topic.
+
+```bash
+curl -X POST http://localhost:8080/supercrawler \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Machine learning for beginners",
+    "max_depth": 3,
+    "crawl_depth": 2
+  }'
+```
+
+---
+
+### 3. Maximum crawl with all parameters
+
+Use this when you want a **comprehensive crawl** of a topic — useful for building datasets, running large-scale analysis, or populating a knowledge base.
+
+- **max_depth=5**: Deepest firecrawl exploration across search engine results.
+- **crawl_depth=5**: Will follow internal links recursively to 5 layers within each page.
+- **max_urls=120**: Fetch up to 120 URLs total across the crawl.
+- **time_limit=600**: Limit the crawl to 10 minutes for safety and performance.
+
+```bash
+curl -X POST http://localhost:8080/supercrawler \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Latest React development patterns",
+    "max_depth": 5,
+    "crawl_depth": 5,
+    "max_urls": 120,
+    "time_limit": 600
+  }'
+```
+
+---
+
+### 4. Minimal crawl  
+(Just the top URLs, no link following)
+
+This is best for a **quick snapshot** — when you just want to grab high-level content and not dive into any linked pages.
+
+- **max_depth=0**: Doesn't explore beyond the first search page.
+- **crawl_depth=0**: No link-following at all inside pages.
+- **max_urls=15**: Limits total pages to a tight 15.
+- **time_limit=150**: Quick timeout (2.5 minutes) to avoid long processing.
+
+```bash
+curl -X POST http://localhost:8080/supercrawler \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Climate change solutions",
+    "max_depth": 0,
+    "crawl_depth": 0,
+    "max_urls": 15,
+    "time_limit": 150
+  }'
+```
+
+
+**Let me know if you want to add visuals or real-world use cases for each one!**

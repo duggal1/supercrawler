@@ -15,6 +15,14 @@ use tempfile::NamedTempFile;
 use log::{info, error};
 use std::time::{Duration, Instant};
 use actix_cors::Cors;
+use dotenv::dotenv;
+
+mod supercrawler;
+use crate::supercrawler::{
+    AppState as SuperCrawlerState,
+    background_crawler as super_background_crawler,
+    super_crawl
+};
 
 #[derive(Serialize, Deserialize)]
 struct CrawlRequest {
@@ -29,7 +37,7 @@ struct CrawlResponse {
     mdx_files: Vec<(String, String)>,
 }
 
-struct AppState {
+struct CrawlerState {
     client: Client,
     semaphore: Arc<Semaphore>,
     tx: mpsc::Sender<(String, usize, usize, String)>,
@@ -481,7 +489,7 @@ async fn process_url(
 }
 
 /// Handles the crawl request, initiating the crawling process.
-async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -> impl Responder {
+async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState>) -> impl Responder {
     let domains = req.domains.clone()
         .into_iter()
         .filter(|d| Url::parse(d).is_ok())
@@ -537,6 +545,41 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
             // Signal completion
             let _ = complete_tx.send((domain_clone, success)).await;
         });
+    }
+
+    // Process URLs in parallel with optimized concurrency
+    let max_depth = req.max_depth.unwrap_or(5).min(5);
+    let mut tasks = Vec::new();
+    let processed_urls = Arc::new(tokio::sync::Mutex::new(HashSet::new()));
+
+    // Create a vector of URLs to process to avoid lifetime issues
+    let urls_to_process: Vec<String> = domains.iter().cloned().collect();
+    
+    for url in urls_to_process {
+        let client = state.client.clone();
+        let semaphore = state.semaphore.clone();
+        let tx = state.tx.clone();
+        let logs = state.logs.clone();
+        let processed_urls = processed_urls.clone();
+        let url_clone = url.clone();
+
+        tasks.push(tokio::spawn(async move {
+            if processed_urls.lock().await.contains(&url) {
+                return None;
+            }
+            processed_urls.lock().await.insert(url.clone());
+
+            process_url(
+                &client,
+                &semaphore,
+                &url,
+                0,
+                max_depth,
+                &url_clone,
+                &tx,
+                &logs
+            ).await.then(|| url)
+        }));
     }
     
     // Real-time status monitoring task
@@ -607,7 +650,7 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
     let elapsed = start_time.elapsed();
     let final_message = format!(
         "Completed crawling {} domains ({} successful) in {:.2} seconds", 
-        domains.len(), 
+        total_spawned, 
         successful_count,
         elapsed.as_secs_f64()
     );
@@ -623,7 +666,7 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<AppState>) -
 }
 
 /// Serves an MDX file based on domain and path.
-async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<AppState>) -> impl Responder {
+async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<CrawlerState>) -> impl Responder {
     let (domain, path) = path.into_inner();
     let path_binding = path.replace('/', "_").trim_start_matches('_').to_string();
     let filename = format!("./output/{}/{}.mdx", domain, path_binding);
@@ -636,136 +679,99 @@ async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<AppState>)
 /// Main entry point, sets up the server and background crawler task.
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Load .env file if it exists
+    dotenv().ok();
+    
     env_logger::Builder::new().filter_level(log::LevelFilter::Info).init();
     let host = "127.0.0.1";
     let port = 8080;
 
-    info!("Initializing crawler with extreme concurrency and scalability");
+    info!("Initializing both Crawler and Super Crawler APIs with 2025 optimizations");
+    
+    // Log environment variables (with masking for secrets)
+    if let Ok(api_key) = std::env::var("FIRECRAWL_API_KEY") {
+        if !api_key.is_empty() {
+            let masked_key = format!("{}...{}", &api_key[0..5], &api_key[api_key.len()-5..]);
+            info!("Found FIRECRAWL_API_KEY in environment: {}", masked_key);
+        } else {
+            info!("FIRECRAWL_API_KEY is set but empty");
+        }
+    } else {
+        info!("FIRECRAWL_API_KEY not found in environment");
+    }
+
     let max_concurrency = 1000;
     let client = Client::builder()
         .pool_max_idle_per_host(1000)
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(15))
+        .pool_idle_timeout(Duration::from_secs(90))
         .build()
         .unwrap();
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
-    let (tx, mut rx) = mpsc::channel::<(String, usize, usize, String)>(1_000_000);
+    
+    // Create separate channels for each crawler
+    let (regular_tx, mut regular_rx) = mpsc::channel::<(String, usize, usize, String)>(1_000_000);
+    let (super_tx, super_rx) = mpsc::channel::<(String, usize, usize, String)>(1_000_000);
     let logs = Arc::new(tokio::sync::Mutex::new(Vec::new()));
 
-    let tx_clone = tx.clone();
-    let client_clone = client.clone();
-    let semaphore_clone = semaphore.clone();
-    let logs_clone = logs.clone();
-
+    // Spawn regular crawler background task
+    let regular_client = client.clone();
+    let regular_semaphore = semaphore.clone();
+    let regular_logs = logs.clone();
+    let regular_tx_clone = regular_tx.clone();  // Clone before moving into async block
     tokio::spawn(async move {
-        let mut visited = HashSet::with_capacity(1_000_000);
-        let mut active_tasks = 0;
-        let (task_tx, mut task_rx) = mpsc::channel::<()>(10_000);
-        let (progress_tx, _) = mpsc::channel::<(usize, usize, usize)>(1000);
-        
-        // Track URLs by depth for progress reporting - use Arc to share between tasks
-        let depth_counts = Arc::new(tokio::sync::Mutex::new(vec![0; 6])); // Track counts for depths 0-5
-        let depth_processed = Arc::new(tokio::sync::Mutex::new(vec![0; 6])); // Track processed for depths 0-5
-        
-        // Batch logging - update less frequently
-        let mut last_log_time = Instant::now();
-        let log_interval = Duration::from_secs(5); // Only log every 5 seconds
-        
-        info!("Background crawler task started");
-        
-        loop {
-            tokio::select! {
-                // Process new URLs
-                Some((url, current_depth, max_depth, domain)) = rx.recv() => {
-                    if visited.contains(&url) {
-                        continue;
-                    }
-                    visited.insert(url.clone());
-                    
-                    // Update depth tracking
-                    if current_depth <= 5 {
-                        let mut counts = depth_counts.lock().await;
-                        counts[current_depth] += 1;
-                        
-                        // Only send progress updates periodically to reduce overhead
-                        let now = Instant::now();
-                        if now.duration_since(last_log_time) >= log_interval {
-                            last_log_time = now;
-                            let current_processed = depth_processed.lock().await[current_depth];
-                            let _ = progress_tx.send((
-                                current_depth, 
-                                counts[current_depth], 
-                                current_processed
-                            )).await;
-                        }
-                    }
-                    
-                    let client = client_clone.clone();
-                    let semaphore = semaphore_clone.clone();
-                    let tx = tx_clone.clone();
-                    let logs = logs_clone.clone();
-                    let task_tx = task_tx.clone();
-                    let progress_tx = progress_tx.clone();
-                    let current_depth_copy = current_depth;
-                    let depth_counts_clone = depth_counts.clone();
-                    let depth_processed_clone = depth_processed.clone();
-                    
-                    active_tasks += 1;
-                    // Only log active tasks periodically
-                    if active_tasks % 100 == 0 {
-                        info!("Active crawler tasks: {} (depth {})", active_tasks, current_depth);
-                    }
-                    
-                    tokio::spawn(async move {
-                        let _success = process_url(&client, &semaphore, &url, current_depth, max_depth, &domain, &tx, &logs).await;
-                        
-                        // Update progress for this depth - minimize locking
-                        if current_depth_copy <= 5 {
-                            let mut processed = depth_processed_clone.lock().await;
-                            if current_depth_copy < processed.len() {
-                                processed[current_depth_copy] += 1;
-                                
-                                // Only send updates on significant milestones (every 10th URL)
-                                if processed[current_depth_copy] % 10 == 0 {
-                                    let counts = depth_counts_clone.lock().await;
-                                    let _ = progress_tx.try_send((
-                                        current_depth_copy, 
-                                        counts[current_depth_copy], 
-                                        processed[current_depth_copy]
-                                    ));
-                                }
-                            }
-                        }
-                        
-                        let _ = task_tx.send(()).await;
-                    });
-                }
-                
-                // Track completed tasks
-                Some(_) = task_rx.recv() => {
-                    active_tasks -= 1;
-                    // Only log significant changes in active tasks
-                    if active_tasks % 100 == 0 {
-                        info!("Task completed. Active crawler tasks: {}", active_tasks);
-                    }
-                }
-                
-                // Exit if channel is closed and no active tasks
-                else => {
-                    if active_tasks == 0 {
-                        info!("Background crawler task completed - all URLs processed");
-                        break;
-                    }
-                }
+        let mut visited = HashSet::<String>::new();
+        while let Some((url, depth, max_depth, domain)) = regular_rx.recv().await {
+            if visited.contains(&url) {
+                continue;
+            }
+            visited.insert(url.clone());
+            
+            let success = process_url(
+                &regular_client,
+                &regular_semaphore,
+                &url,
+                depth,
+                max_depth,
+                &domain,
+                &regular_tx_clone,  // Use cloned sender
+                &regular_logs
+            ).await;
+
+            if success {
+                regular_logs.lock().await.push(format!("Successfully processed: {}", url));
             }
         }
     });
 
-    let state = web::Data::new(AppState {
+    // Spawn super crawler background task
+    let super_client = client.clone();
+    let super_semaphore = semaphore.clone();
+    let super_logs = logs.clone();
+    tokio::spawn(super_background_crawler(
+        super_client,
+        super_semaphore,
+        super_tx.clone(),
+        super_rx,
+        super_logs
+    ));
+
+    // Set up states for both crawlers
+    let regular_state = web::Data::new(CrawlerState {
+        client: client.clone(),
+        semaphore: semaphore.clone(),
+        tx: regular_tx,
+        logs: logs.clone(),
+    });
+
+    let super_state = web::Data::new(SuperCrawlerState {
         client,
         semaphore,
-        tx,
+        tx: super_tx,
         logs,
     });
+
     info!("Starting server at http://{}:{}", host, port);
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -776,8 +782,10 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .app_data(state.clone())
+            .app_data(regular_state.clone())
+            .app_data(super_state.clone())
             .route("/crawl", web::post().to(start_crawl))
+            .route("/supercrawler", web::post().to(super_crawl))
             .route("/mdx/{domain}/{path:.*}", web::get().to(get_mdx))
     })
     .bind((host, port))?
