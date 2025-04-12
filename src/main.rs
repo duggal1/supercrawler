@@ -907,7 +907,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             // .app_data(regular_state.clone()) // Keep commented
             .app_data(super_state.clone())
-            // .route("/crawl", web::post().to(start_crawl)) // Keep commented
+            .route("/crawl", web::post().to(start_crawl)) // <--- This line is commented out
             .route("/supercrawler", web::post().to(super_crawl))
             // .route("/mdx/{domain}/{path:.*}", web::get().to(get_mdx)) // Keep commented
     })
