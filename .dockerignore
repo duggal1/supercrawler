@@ -1,0 +1,15 @@
+# Ignore build artifacts
+target/
+
+# Ignore Git directory
+.git/
+
+# Ignore output directory (this should be a persistent volume on Fly.io)
+output/
+
+# Ignore environment file (use Fly.io secrets instead)
+.env
+
+# Ignore IDE configuration files
+.idea/
+.vscode/ 

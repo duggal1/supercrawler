@@ -16,11 +16,13 @@ use log::{info, error, warn};
 use std::time::{Duration, Instant};
 use actix_cors::Cors;
 use dotenv::dotenv;
+use futures::future::select_all;
+use serde_json::json;
 
 mod supercrawler;
 use crate::supercrawler::{
     AppState as SuperCrawlerState,
-    background_crawler as super_background_crawler,
+    // background_crawler as super_background_crawler, // Comment out if background crawler is fully commented out
     super_crawl
 };
 
@@ -827,10 +829,17 @@ async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<CrawlerSta
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
-    let host = "127.0.0.1";
+    let host = "0.0.0.0";
     let port = 8080;
 
-    info!("Initializing Crawler API (SuperCrawler parts separate)");
+    info!("Initializing Crawler API with SuperCrawler endpoint");
+
+    let max_concurrency = 500;
+    let request_timeout_secs = 25;
+    let connect_timeout_secs = 15;
+
+    info!("Configuration: Max Concurrency={}, Request Timeout={}s, Connect Timeout={}s",
+          max_concurrency, request_timeout_secs, connect_timeout_secs);
 
     if let Ok(api_key) = std::env::var("FIRECRAWL_API_KEY") {
         if api_key.len() >= 10 {
@@ -845,67 +854,44 @@ async fn main() -> std::io::Result<()> {
         info!("FIRECRAWL_API_KEY not found in environment");
     }
 
-    let max_concurrency = 1000;
     let client = Client::builder()
-        .pool_max_idle_per_host(50)
-        .timeout(Duration::from_secs(30))
-        .connect_timeout(Duration::from_secs(15))
+        .pool_max_idle_per_host(max_concurrency / 2)
+        .timeout(Duration::from_secs(request_timeout_secs))
+        .connect_timeout(Duration::from_secs(connect_timeout_secs))
         .pool_idle_timeout(Duration::from_secs(90))
-        .user_agent("SuperCrawler/1.0")
-        .redirect(reqwest::redirect::Policy::limited(5))
+        .user_agent("SuperCrawler/1.2")
+        .redirect(reqwest::redirect::Policy::limited(10))
+        .https_only(true)
         .build()
         .expect("Failed to build reqwest client");
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
 
-    let (bg_tx, mut bg_rx) = mpsc::channel::<(String, usize, usize, String)>(100_000);
     let logs = Arc::new(tokio::sync::Mutex::new(Vec::new()));
 
-    let bg_client = client.clone();
-    let bg_semaphore = semaphore.clone();
-    let bg_logs = logs.clone();
-    tokio::spawn(async move {
-        let mut visited = HashSet::<String>::new();
-        info!("Background worker task started.");
-        while let Some((url, depth, max_depth, _domain)) = bg_rx.recv().await {
-            if !visited.insert(url.clone()) {
-                continue;
-            }
-            info!("Background task processing: {} (Depth {}/{})", url, depth, max_depth);
+    // --- Define the channel even if the background task isn't spawned ---
+    // We still need the sender 'tx' for the AppState struct.
+    // The receiver 'bg_rx' can be ignored if the task isn't spawned.
+    let (bg_tx, _bg_rx) = mpsc::channel::<(String, usize, usize, String)>(50_000); // Create the channel pair
+    // --- End Define the channel ---
 
-            let (_filename_option, _extracted_urls) = process_url(
-                &bg_client,
-                &bg_semaphore,
-                url,
-                &bg_logs,
-            ).await;
-        }
-        info!("Background worker task finished.");
-    });
 
-    let (super_tx, super_rx) = mpsc::channel::<(String, usize, usize, String)>(100_000);
-    let super_client = client.clone();
-    let super_semaphore = semaphore.clone();
-    let super_logs = logs.clone();
-    tokio::spawn(super_background_crawler(
-        super_client,
-        super_semaphore,
-        super_tx.clone(),
-        super_rx,
-        super_logs
-    ));
+    // --- Background Crawler Task Spawn (Optional - Keep commented if not needed) ---
+    // let bg_client = client.clone();
+    // let bg_semaphore = semaphore.clone();
+    // let bg_logs = logs.clone();
+    // tokio::spawn(super_background_crawler(
+    //     bg_client, bg_semaphore, bg_tx.clone(), _bg_rx, bg_logs // Use _bg_rx if spawning
+    // ));
+    // --- End Background Crawler Task Spawn ---
 
-    let regular_state = web::Data::new(CrawlerState {
-        client: client.clone(),
-        semaphore: semaphore.clone(),
-        logs: logs.clone(),
-        bg_tx: bg_tx,
-    });
+
+    // let regular_state = web::Data::new(CrawlerState { ... }); // Keep commented
 
     let super_state = web::Data::new(SuperCrawlerState {
         client,
         semaphore,
-        tx: super_tx,
+        tx: bg_tx, // Add the tx field back using the created sender
         logs,
     });
 
@@ -919,11 +905,11 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .app_data(regular_state.clone())
+            // .app_data(regular_state.clone()) // Keep commented
             .app_data(super_state.clone())
-            .route("/crawl", web::post().to(start_crawl))
+            // .route("/crawl", web::post().to(start_crawl)) // Keep commented
             .route("/supercrawler", web::post().to(super_crawl))
-            .route("/mdx/{domain}/{path:.*}", web::get().to(get_mdx))
+            // .route("/mdx/{domain}/{path:.*}", web::get().to(get_mdx)) // Keep commented
     })
     .bind((host, port))?
     .run()
