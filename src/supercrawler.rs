@@ -505,6 +505,68 @@ fn clean_to_mdx(content: &str, source_url: &str) -> String {
     final_mdx
 }
 
+fn save_mdx(url_str: &str, mdx: &str) -> Option<String> {
+    let filename = url_to_filename(url_str);
+    let dir = Path::new(&filename).parent()?;
+
+    if let Err(e) = fs::create_dir_all(dir) {
+        error!("Failed to create directory {}: {}", dir.display(), e);
+        return None;
+    }
+    match File::create(&filename) {
+        Ok(mut file) => {
+            if let Err(e) = file.write_all(mdx.as_bytes()) {
+                error!("Failed to write MDX to {}: {}", filename, e);
+                None
+            } else {
+                info!("Successfully saved MDX file: {}", filename);
+                Some(filename)
+            }
+        }
+        Err(e) => {
+             error!("Failed to create file {}: {}", filename, e);
+             None
+        }
+    }
+}
+
+fn url_to_filename(url: &str) -> String {
+    let parsed_url = match Url::parse(url) {
+        Ok(p) => p,
+        Err(_) => {
+            warn!("Failed to parse URL for filename generation: {}", url);
+            let safe_url = url.chars().filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_').collect::<String>();
+            return format!("./output/invalid_url/{}.mdx", safe_url);
+        }
+    };
+
+    let domain = parsed_url.domain().unwrap_or("unknown_domain");
+    let path_part = format!("{}{}", parsed_url.path(), parsed_url.query().map(|q| format!("_{}", q)).unwrap_or_default());
+    let sanitized_path = path_part
+        .chars()
+        .map(|c| match c {
+            '/' | '?' | '&' | '=' | ':' | '%' | '#' => '_',
+            _ => c,
+        })
+        .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_')
+        .collect::<String>();
+
+    let max_len = 100;
+    let truncated_path = if sanitized_path.len() > max_len {
+        &sanitized_path[..max_len]
+    } else {
+        &sanitized_path
+    };
+
+    let final_path_part = if truncated_path.is_empty() || truncated_path == "_" {
+        "index"
+    } else {
+        truncated_path.trim_start_matches('_').trim_end_matches('_')
+    };
+
+    format!("./output/{}/{}.mdx", domain, final_path_part)
+}
+
 async fn fetch_and_extract_urls(client: &Client, url: &str) -> Vec<String> {
     if url.ends_with(".pdf") {
         return Vec::new();
@@ -633,7 +695,7 @@ async fn process_url(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("unknown");
 
-    let mut mdx_content_option: Option<String> = None;
+    let mut mdx_content: Option<String> = None;
     let mut extracted_urls: Vec<String> = Vec::new();
 
     if content_type.contains("application/pdf") {
@@ -643,7 +705,7 @@ async fn process_url(
                 "---\ntitle: \"PDF Document: {}\"\ndescription: \"Extracted text from PDF.\"\nsourceUrl: \"{}\"\n---\n\n{}",
                  url.split('/').last().unwrap_or("document.pdf"), url, pdf_text
             );
-            mdx_content_option = Some(pdf_mdx);
+            mdx_content = Some(pdf_mdx);
         } else {
              error!("Failed to extract text from PDF: {}", url);
              logs.lock().await.push(format!("Failed to extract text from PDF: {}", url));
@@ -652,7 +714,7 @@ async fn process_url(
         info!("Fetching HTML content from {}", url);
         match resp.text_with_charset("utf-8").await {
             Ok(html_content) => {
-                 mdx_content_option = Some(clean_to_mdx(&html_content, &url));
+                 mdx_content = Some(clean_to_mdx(&html_content, &url));
                 extracted_urls = fetch_and_extract_urls(client, &url).await;
             }
             Err(e) => {
@@ -665,7 +727,24 @@ async fn process_url(
          logs.lock().await.push(format!("Skipping unsupported content type '{}' for URL: {}", content_type, url));
     }
 
-    (mdx_content_option, extracted_urls)
+    let saved_filename = if let Some(mdx) = mdx_content {
+        if !mdx.is_empty() {
+            save_mdx(&url, &mdx)
+        } else {
+             warn!("Generated MDX was empty for URL: {}", url);
+             logs.lock().await.push(format!("Generated MDX was empty for URL: {}", url));
+            None
+        }
+    } else {
+        None
+    };
+
+    if saved_filename.is_some() {
+         info!("Successfully processed and saved: {}", url);
+        logs.lock().await.push(format!("Successfully processed: {}", url));
+    }
+
+    (saved_filename, extracted_urls)
 }
 
 async fn poll_job_status(
@@ -1154,13 +1233,13 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
             let logs_clone = logs.clone();
 
             active_tasks.push(tokio::spawn(async move {
-                let (mdx_content_option, extracted_urls) = process_url(
+                let (filename_option, extracted_urls) = process_url(
                     &client,
                     &semaphore,
                     url.clone(),
                     &logs_clone
                 ).await;
-                (url, depth, mdx_content_option, extracted_urls)
+                (url, depth, filename_option, extracted_urls)
             }));
         }
 
@@ -1169,15 +1248,17 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
             active_tasks = remaining_tasks;
 
             match result {
-                Ok((original_url, current_depth, mdx_content_option, extracted_urls)) => {
-                    if let Some(mdx_content) = mdx_content_option {
-                        if !mdx_content.is_empty() {
-                            logs.lock().await.push(format!("Collected MDX from: {}", original_url));
-                             mdx_results.push((original_url.clone(), mdx_content));
-                        } else {
-                             warn!("Generated MDX was empty for URL (not adding to results): {}", original_url);
-                             logs.lock().await.push(format!("Generated MDX was empty for URL: {}", original_url));
-                        }
+                Ok((original_url, current_depth, filename_option, extracted_urls)) => {
+                    if let Some(filename) = filename_option {
+                         match fs::read_to_string(&filename) {
+                             Ok(content) => {
+                                 mdx_results.push((original_url.clone(), content));
+                              },
+                             Err(e) => {
+                                 error!("Failed to read saved MDX file {}: {}", filename, e);
+                                 logs.lock().await.push(format!("Failed to read saved MDX file {}: {}", filename, e));
+                              }
+                         }
                     }
 
                      if current_depth < crawl_depth {
@@ -1213,7 +1294,7 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
         mdx_crawler_elapsed.as_secs_f64(), processed_count
     ));
      logs.lock().await.push(format!("[TOTAL TIMING] ⏱️ Total processing time: {:.2}s", overall_elapsed.as_secs_f64()));
-     logs.lock().await.push(format!("[RESULTS] Collected {} MDX results.", mdx_results.len()));
+     logs.lock().await.push(format!("[RESULTS] Collected {} MDX files.", mdx_results.len()));
 
     let final_logs = logs.lock().await.clone();
 
@@ -1235,7 +1316,7 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
     });
 
     let response_message = format!(
-        "Completed SuperCrawl. Processed {} URLs for MDX in {:.2}s. Collected {} MDX results.",
+        "Completed SuperCrawl. Processed {} URLs for MDX in {:.2}s. Collected {} MDX files.",
         processed_count,
         mdx_crawler_elapsed.as_secs_f64(),
         mdx_results.len()
@@ -1261,7 +1342,7 @@ pub async fn background_crawler(
     mut rx: mpsc::Receiver<(String, usize, usize, String)>,
     logs: Arc<tokio::sync::Mutex<Vec<String>>>,
 ) {
-    info!("🚀 Starting background crawler task (File saving disabled mode - output behavior TBD)");
+    info!("🚀 Starting background crawler task");
     let mut visited = HashSet::<String>::new();
     while let Some((url, depth, max_depth, domain)) = rx.recv().await {
         if !visited.insert(url.clone()) {
@@ -1270,7 +1351,7 @@ pub async fn background_crawler(
         }
         info!("Background task processing: {} (Depth {}/{})", url, depth, max_depth);
 
-        let (_mdx_content_option, extracted_urls) = process_url(
+        let (_filename_option, extracted_urls) = process_url(
             &client,
             &semaphore,
             url.clone(),
@@ -1304,4 +1385,18 @@ async fn start_crawl(_req: web::Json<CrawlRequest>, _state: web::Data<CrawlerSta
         "message": "This endpoint is deprecated. Use /supercrawler.",
         "logs": ["Redirecting to /supercrawler functionality internally is not implemented."]
     }))
+}
+
+async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<CrawlerState>) -> impl Responder {
+    let (domain, path_param) = path.into_inner();
+    let filename = format!("./output/{}/{}.mdx", domain, path_param);
+    match fs::read_to_string(&filename) {
+        Ok(content) => HttpResponse::Ok()
+            .content_type("text/markdown; charset=utf-8")
+            .body(content),
+        Err(e) => {
+             warn!("MDX file not found for get_mdx: {} ({})", filename, e);
+             HttpResponse::NotFound().body(format!("MDX not found for {}/{}", domain, path_param))
+         }
+    }
 }

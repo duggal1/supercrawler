@@ -22,7 +22,7 @@ use serde_json::json;
 mod supercrawler;
 use crate::supercrawler::{
     AppState as SuperCrawlerState,
-    // background_crawler as super_background_crawler, // Comment out if background crawler is fully commented out
+    background_crawler as super_background_crawler,
     super_crawl
 };
 
@@ -829,7 +829,7 @@ async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<CrawlerSta
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
-    let host = "0.0.0.0";
+    let host = "127.0.0.1";
     let port = 8080;
 
     info!("Initializing Crawler API with SuperCrawler endpoint");
@@ -869,29 +869,25 @@ async fn main() -> std::io::Result<()> {
 
     let logs = Arc::new(tokio::sync::Mutex::new(Vec::new()));
 
-    // --- Define the channel even if the background task isn't spawned ---
-    // We still need the sender 'tx' for the AppState struct.
-    // The receiver 'bg_rx' can be ignored if the task isn't spawned.
-    let (bg_tx, _bg_rx) = mpsc::channel::<(String, usize, usize, String)>(50_000); // Create the channel pair
-    // --- End Define the channel ---
+    let (bg_tx, bg_rx) = mpsc::channel::<(String, usize, usize, String)>(50_000);
+    let bg_client = client.clone();
+    let bg_semaphore = semaphore.clone();
+    let bg_logs = logs.clone();
+    tokio::spawn(super_background_crawler(
+        bg_client, bg_semaphore, bg_tx.clone(), bg_rx, bg_logs
+    ));
 
-
-    // --- Background Crawler Task Spawn (Optional - Keep commented if not needed) ---
-    // let bg_client = client.clone();
-    // let bg_semaphore = semaphore.clone();
-    // let bg_logs = logs.clone();
-    // tokio::spawn(super_background_crawler(
-    //     bg_client, bg_semaphore, bg_tx.clone(), _bg_rx, bg_logs // Use _bg_rx if spawning
-    // ));
-    // --- End Background Crawler Task Spawn ---
-
-
-    // let regular_state = web::Data::new(CrawlerState { ... }); // Keep commented
+    let regular_state = web::Data::new(CrawlerState {
+        client: client.clone(),
+        semaphore: semaphore.clone(),
+        logs: logs.clone(),
+        bg_tx: bg_tx.clone(),
+    });
 
     let super_state = web::Data::new(SuperCrawlerState {
         client,
         semaphore,
-        tx: bg_tx, // Add the tx field back using the created sender
+        tx: bg_tx,
         logs,
     });
 
@@ -905,11 +901,11 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            // .app_data(regular_state.clone()) // Keep commented
+            .app_data(regular_state.clone())
             .app_data(super_state.clone())
-            .route("/crawl", web::post().to(start_crawl)) // <--- This line is commented out
+            .route("/crawl", web::post().to(start_crawl))
             .route("/supercrawler", web::post().to(super_crawl))
-            // .route("/mdx/{domain}/{path:.*}", web::get().to(get_mdx)) // Keep commented
+            .route("/mdx/{domain}/{path:.*}", web::get().to(get_mdx))
     })
     .bind((host, port))?
     .run()
