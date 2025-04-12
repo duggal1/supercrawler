@@ -19,7 +19,7 @@ use futures::future::join_all;
 use std::env;
 use serde_json::json;
 
-// Define the AppState struct
+
 pub struct AppState {
     pub client: Client,
     pub semaphore: Arc<Semaphore>,
@@ -47,6 +47,7 @@ pub struct SuperCrawlerRequest {
     max_urls: Option<u32>,
     time_limit: Option<u32>,
     crawl_depth: Option<usize>,
+    firecrawl_api_key: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -525,96 +526,156 @@ async fn process_url(
     }
 
     drop(permit);
-    if current_depth < max_depth {
+    
+    // Recursively crawl deeper if we haven't reached max depth yet
+    if success && current_depth < max_depth {
+        info!("🔍 Looking for links to crawl deeper from {} (current depth: {}, max: {})", url, current_depth, max_depth);
+        logs.lock().await.push(format!("🔍 Looking for links to crawl deeper from {} (current depth: {}, max: {})", url, current_depth, max_depth));
+        
         let urls = fetch_and_extract_urls(client, url).await;
         info!("🔗 Found {} URLs at {} (depth: {}/{})", urls.len(), url, current_depth, max_depth);
         logs.lock().await.push(format!("🔗 Found {} URLs at {} (depth: {}/{})", urls.len(), url, current_depth, max_depth));
         
+        // Debug the domain for link filtering
+        if let Ok(parsed_domain) = Url::parse(domain) {
+            info!("🔍 Domain for filtering: {:?}", parsed_domain.domain());
+            logs.lock().await.push(format!("🔍 Domain for filtering: {:?}", parsed_domain.domain()));
+        }
+        
+        let mut links_queued = 0;
         for next_url in urls {
             if let Ok(parsed) = Url::parse(&next_url) {
                 if let Ok(domain_url) = Url::parse(domain) {
-                    if parsed.domain() == domain_url.domain() {
+                    // Extract domain parts for more flexible matching
+                    let next_domain = parsed.domain();
+                    let original_domain = domain_url.domain();
+                    
+                    // Better domain matching logic
+                    let domain_matches = match (next_domain, original_domain) {
+                        (Some(nd), Some(od)) => {
+                            // Match exact domain or subdomains
+                            nd == od || nd.ends_with(&format!(".{}", od))
+                        },
+                        _ => false
+                    };
+                    
+                    if domain_matches {
                         info!("📋 Queueing URL for processing: {} at depth {}", next_url, current_depth + 1);
                         logs.lock().await.push(format!("📋 Queueing URL for processing: {} at depth {}", next_url, current_depth + 1));
                         let _ = tx.send((next_url.clone(), current_depth + 1, max_depth, domain.to_string())).await;
+                        links_queued += 1;
+                    } else {
+                        debug!("🚫 Skipping URL from different domain: {}", next_url);
                     }
                 }
             }
         }
+        
+        info!("📊 Queued {} URLs for deeper crawling from {}", links_queued, url);
+        logs.lock().await.push(format!("📊 Queued {} URLs for deeper crawling from {}", links_queued, url));
     }
     
     success
 }
 
 /// Poll the job status from Firecrawl Deep Research API
-async fn poll_job_status(client: &Client, job_id: &str, api_key: &str) -> Result<DeepResearchResponse, String> {
-    info!("[POLLING START] 😍 Job ID: {}", job_id);
+async fn poll_job_status(
+    client: &Client, 
+    job_id: &str, 
+    api_key: &str,
+    logs: &Arc<tokio::sync::Mutex<Vec<String>>>,
+) -> Result<DeepResearchResponse, String> {
+    let log_prefix = format!("[POLLING JOB {}]", job_id);
+    info!("{log_prefix} 😍 Starting polling");
+    logs.lock().await.push(format!("{log_prefix} 😍 Starting polling"));
+    
     let start_time = Instant::now();
     let url = format!("https://api.firecrawl.dev/v1/deep-research/{}", job_id);
-    let max_duration = Duration::from_secs(600); // 10 minutes max (reduced from 15min)
+    let max_duration = Duration::from_secs(600); // 10 minutes max
     let mut retry_count = 0;
     let max_retries = 5;
 
     while start_time.elapsed() < max_duration {
-        info!("[POLLING] ✅ Checking status for Job ID: {}", job_id);
+        let msg = format!("{log_prefix} ✅ Checking status (Attempt {})", retry_count + 1);
+        info!("{}", msg);
+        logs.lock().await.push(msg);
         
         match client.get(&url)
             .header("Authorization", format!("Bearer {}", api_key))
-            .timeout(Duration::from_secs(30)) // Add explicit timeout per request
+            .timeout(Duration::from_secs(30))
             .send()
             .await {
                 Ok(response) => {
                     let status_code = response.status();
-                    info!("[POLLING RESPONSE] Status code: {}", status_code);
-                    retry_count = 0; // Reset retry count on success
+                    let msg = format!("{log_prefix} RESPONSE Status code: {}", status_code);
+                    info!("{}", msg);
+                    logs.lock().await.push(msg);
                     
+                    retry_count = 0; // Reset retry count on successful communication
+
                     if !status_code.is_success() {
-                        warn!("[POLLING WARNING] ⚠️ Non-success status code: {}", status_code);
                         let error_text = response.text().await.unwrap_or_default();
-                        warn!("[POLLING ERROR BODY] {}", error_text);
-                        return Err(format!("API returned error status: {}, body: {}", status_code, error_text));
+                        let err_msg = format!("{log_prefix} ⚠️ Non-success status code: {}. Body: {}", status_code, error_text);
+                        warn!("{}", err_msg);
+                        logs.lock().await.push(err_msg.clone());
+                        return Err(err_msg);
                     }
 
                     match response.json::<DeepResearchResponse>().await {
                         Ok(status_data) => {
-                            info!("[POLLING RESPONSE] ✔️ Status: {:?}, Has ID: {}, Success: {}", 
+                            let success_msg = format!("{log_prefix} ✔️ Parsed Status: {:?}, Success: {}", 
                                 status_data.status, 
-                                status_data.id.is_some(),
                                 status_data.success);
+                            info!("{}", success_msg);
+                            logs.lock().await.push(success_msg);
                             
                             if let Some(status) = &status_data.status {
                                 if status == "completed" {
-                                    info!("[POLLING COMPLETE] ✅ Job {} finished", job_id);
+                                    let complete_msg = format!("{log_prefix} ✅ Job completed successfully");
+                                    info!("{}", complete_msg);
+                                    logs.lock().await.push(complete_msg);
                                     return Ok(status_data);
                                 }
                             }
                             
-                            info!("[POLLING WAIT] 🚧 Status not completed, waiting 3s...");
+                            let wait_msg = format!("{log_prefix} 🚧 Status not 'completed', waiting 3s...");
+                            info!("{}", wait_msg);
+                            logs.lock().await.push(wait_msg);
                             tokio::time::sleep(Duration::from_secs(3)).await;
                         },
                         Err(e) => {
-                            error!("[POLLING JSON ERROR] ❌ Failed to parse response: {}", e);
-                            return Err(format!("Failed to parse status response: {}", e));
+                            let err_msg = format!("{log_prefix} ❌ Failed to parse JSON response: {}", e);
+                            error!("{}", err_msg);
+                            logs.lock().await.push(err_msg.clone());
+                            return Err(err_msg);
                         }
                     }
                 },
                 Err(e) => {
                     retry_count += 1;
-                    let retry_delay = 2_u64.pow(retry_count as u32) * 375; // Exponential backoff: 0.75s, 1.5s, 3s, 6s, 12s
-                    error!("[POLLING REQUEST ERROR] ❌ Failed to check status: {} (Retry {}/{})", e, retry_count, max_retries);
+                    let retry_delay = 2_u64.pow(retry_count as u32) * 375;
+                    let err_msg = format!("{log_prefix} ❌ Request error: {} (Retry {}/{})", e, retry_count, max_retries);
+                    error!("{}", err_msg);
+                    logs.lock().await.push(err_msg.clone());
                     
                     if retry_count >= max_retries {
-                        return Err(format!("Failed to check job status after {} retries: {}", max_retries, e));
+                        let final_err = format!("{log_prefix} ❌ Failed after {} retries: {}", max_retries, e);
+                         logs.lock().await.push(final_err.clone());
+                        return Err(final_err);
                     }
                     
-                    info!("[POLLING RETRY] Waiting {}ms before retry #{}", retry_delay, retry_count + 1);
+                    let retry_msg = format!("{log_prefix} ⏳ Waiting {}ms before retry #{}", retry_delay, retry_count + 1);
+                    info!("{}", retry_msg);
+                    logs.lock().await.push(retry_msg);
                     tokio::time::sleep(Duration::from_millis(retry_delay)).await;
                 }
             }
     }
 
-    error!("[POLLING TIMEOUT] ⚠️ Job {} exceeded timeout of {}s", job_id, max_duration.as_secs());
-    Err(format!("Job polling timed out after {}s", start_time.elapsed().as_secs()))
+    let timeout_msg = format!("{log_prefix} ⚠️ Job polling timed out after {}s", start_time.elapsed().as_secs());
+    error!("{}", timeout_msg);
+    logs.lock().await.push(timeout_msg.clone());
+    Err(timeout_msg)
 }
 
 /// Fetch deep research URLs from Firecrawl API
@@ -625,142 +686,172 @@ async fn fetch_deep_research_urls(
     time_limit: u32,
     max_depth: usize,
     api_key: &str,
+    logs: &Arc<tokio::sync::Mutex<Vec<String>>>,
 ) -> Result<Vec<String>, String> {
     let firecrawl_url = "https://api.firecrawl.dev/v1/deep-research";
     
-    info!("[FIRECRAWL START] 🔥 Initiating deep research API call");
-    info!("[FIRECRAWL REQUEST] Query: {}, Max URLs: {}, Time Limit: {}s, Max Depth: {}", 
-          query, max_urls, time_limit, max_depth);
+    let start_msg = "[FIRECRAWL START] 🔥 Initiating deep research API call";
+    info!("{}", start_msg);
+    logs.lock().await.push(start_msg.to_string());
     
-    // Ensure time_limit is within reasonable bounds (150-600 seconds)
-    let validated_time_limit = if time_limit < 150 {
-        info!("[FIRECRAWL PARAM] Time limit too low, setting to minimum 150s");
-        150
-    } else if time_limit > 600 {
-        info!("[FIRECRAWL PARAM] Time limit too high, setting to maximum 600s");
-        600
-    } else {
-        time_limit
-    };
+    let req_details = format!("[FIRECRAWL REQUEST] Query: {}, Max URLs: {}, Time Limit: {}s, Max Depth: {}", 
+                              query, max_urls, time_limit, max_depth);
+    info!("{}", req_details);
+    logs.lock().await.push(req_details);
     
-    // Ensure max_depth is within reasonable bounds (0-5)
-    let validated_max_depth = if max_depth > 5 {
-        info!("[FIRECRAWL PARAM] Max depth too high, setting to maximum 5");
-        5
-    } else {
-        max_depth
-    };
-    
+    // Parameter validation logs (already add to logs in super_crawl, but adding here for clarity)
+    let validated_time_limit = if time_limit < 150 { 150 } else if time_limit > 600 { 600 } else { time_limit };
+    let validated_max_depth = if max_depth > 5 { 5 } else { max_depth };
+    let validated_max_urls = if max_urls < 5 { 5 } else if max_urls > 100 { 100 } else { max_urls };
+
+    if validated_time_limit != time_limit || validated_max_depth != max_depth || validated_max_urls != max_urls {
+         let validation_msg = format!("[FIRECRAWL VALIDATED PARAMS] Using MaxUrls: {}, TimeLimit: {}, MaxDepth: {}",
+                                      validated_max_urls, validated_time_limit, validated_max_depth);
+         info!("{}", validation_msg);
+         logs.lock().await.push(validation_msg);
+    }
+
     let payload = json!({
         "query": query,
-        "maxUrls": max_urls,
+        "maxUrls": validated_max_urls,
         "timeLimit": validated_time_limit,
         "maxDepth": validated_max_depth
     });
 
-    info!("[FIRECRAWL PAYLOAD] {}", payload.to_string());
+    let payload_msg = format!("[FIRECRAWL PAYLOAD] {}", payload.to_string());
+    info!("{}", payload_msg);
+    logs.lock().await.push(payload_msg);
 
-    let response = match client
+    let response_result = client
         .post(firecrawl_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .header("Content-Type", "application/json")
-        .timeout(Duration::from_secs(60)) // 60s timeout for initial request
+        .timeout(Duration::from_secs(60))
         .json(&payload)
         .send()
-        .await {
-            Ok(resp) => {
-                let status = resp.status();
-                info!("[FIRECRAWL RESPONSE] Status: {}", status);
-                
-                if !status.is_success() {
-                    let error_text = resp.text().await.unwrap_or_default();
-                    error!("[FIRECRAWL ERROR] Status: {}, Body: {}", status, error_text);
-                    return Err(format!("Firecrawl API error: {} - {}", status, error_text));
-                }
-                
-                // Debug response body as text before trying to parse as JSON
-                let body_text = resp.text().await.unwrap_or_default();
-                info!("[FIRECRAWL RESPONSE BODY] {}", body_text);
-                
-                // Parse the response body manually since we already consumed it as text
-                match serde_json::from_str::<DeepResearchResponse>(&body_text) {
-                    Ok(parsed) => parsed,
-                    Err(e) => {
-                        error!("[FIRECRAWL JSON PARSE ERROR] Failed to parse response: {}", e);
-                        error!("[FIRECRAWL RAW RESPONSE] {}", body_text);
-                        return Err(format!("Failed to parse response: {}, Raw response: {}", e, body_text));
-                    }
-                }
-            },
-            Err(e) => {
-                error!("[FIRECRAWL REQUEST ERROR] {}", e);
-                return Err(format!("Request error: {}", e));
+        .await;
+
+    let response = match response_result {
+        Ok(resp) => {
+            let status = resp.status();
+            let status_msg = format!("[FIRECRAWL RESPONSE] Initial Status: {}", status);
+            info!("{}", status_msg);
+            logs.lock().await.push(status_msg);
+
+            if !status.is_success() {
+                let error_text = resp.text().await.unwrap_or_default();
+                let err_msg = format!("[FIRECRAWL ERROR] Status: {}. Body: {}", status, error_text);
+                error!("{}", err_msg);
+                logs.lock().await.push(err_msg.clone());
+                return Err(err_msg);
             }
-        };
+            
+            let body_text = resp.text().await.unwrap_or_default();
+            let body_log_msg = format!("[FIRECRAWL RESPONSE BODY] {}", body_text);
+            info!("{}", body_log_msg);
+            // Maybe don't log the full body to the user logs? It could be large. Log a summary instead.
+            logs.lock().await.push(format!("[FIRECRAWL RESPONSE BODY] Received response body (length: {})", body_text.len()));
+
+            match serde_json::from_str::<DeepResearchResponse>(&body_text) {
+                Ok(parsed) => parsed,
+                Err(e) => {
+                    let err_msg = format!("[FIRECRAWL JSON PARSE ERROR] Failed: {}. Raw: {}", e, body_text);
+                    error!("{}", err_msg);
+                    logs.lock().await.push(err_msg.clone());
+                    return Err(err_msg);
+                }
+            }
+        },
+        Err(e) => {
+            let err_msg = format!("[FIRECRAWL REQUEST ERROR] {}", e);
+            error!("{}", err_msg);
+            logs.lock().await.push(err_msg.clone());
+            return Err(err_msg);
+        }
+    };
 
     // Process response based on status
-    let research_urls = if response.success {
+    let research_urls_result = if response.success {
         match response.status.as_deref() {
             Some("completed") => {
-                info!("[FIRECRAWL SUCCESS] Research completed immediately");
+                let completed_msg = "[FIRECRAWL SUCCESS] Research completed immediately in initial response.";
+                info!("{}", completed_msg);
+                logs.lock().await.push(completed_msg.to_string());
                 
                 if let Some(data) = response.data {
-                    let urls: Vec<String> = data.sources.into_iter()
-                        .map(|source| source.url)
-                        .collect();
-                    
-                    info!("[FIRECRAWL URLS] Found {} URLs", urls.len());
-                    for (i, url) in urls.iter().enumerate() {
-                        info!("[FIRECRAWL URL {}] {}", i+1, url);
+                    let urls: Vec<String> = data.sources.into_iter().map(|s| s.url).collect();
+                    let urls_msg = format!("[FIRECRAWL URLS] Found {} URLs directly.", urls.len());
+                    info!("{}", urls_msg);
+                    logs.lock().await.push(urls_msg);
+                    // Maybe log first few URLs?
+                    for (i, url) in urls.iter().take(5).enumerate() {
+                         logs.lock().await.push(format!("[FIRECRAWL URL {}] {}", i+1, url));
                     }
-                    
+                    if urls.len() > 5 {
+                         logs.lock().await.push(format!("[FIRECRAWL URLS] ... and {} more.", urls.len() - 5));
+                    }
                     Ok(urls)
                 } else {
-                    error!("[FIRECRAWL ERROR] Missing data in completed response");
-                    Err("Missing data field in completed response".to_string())
+                    let err_msg = "[FIRECRAWL ERROR] Missing data in completed response";
+                    error!("{}", err_msg);
+                    logs.lock().await.push(err_msg.to_string());
+                    Err(err_msg.to_string())
                 }
             },
-            _ => {
-                // Handle async job
+            _ => { // Handle async job potentially
                 if let Some(job_id) = response.id {
-                    info!("[FIRECRAWL ASYNC] 🚀 Job started, polling ID: {}", job_id);
+                    let async_msg = format!("[FIRECRAWL ASYNC] 🚀 Job started, polling ID: {}", job_id);
+                    info!("{}", async_msg);
+                    logs.lock().await.push(async_msg);
                     
-                    match poll_job_status(client, &job_id, api_key).await {
+                    // Pass logs Arc to poll_job_status
+                    match poll_job_status(client, &job_id, api_key, logs).await {
                         Ok(poll_result) => {
                             if let Some(data) = poll_result.data {
-                                let urls: Vec<String> = data.sources.into_iter()
-                                    .map(|source| source.url)
-                                    .collect();
-                                
-                                info!("[FIRECRAWL POLL SUCCESS] Found {} URLs after polling", urls.len());
-                                for (i, url) in urls.iter().enumerate() {
-                                    info!("[FIRECRAWL URL {}] {}", i+1, url);
+                                let urls: Vec<String> = data.sources.into_iter().map(|s| s.url).collect();
+                                let poll_success_msg = format!("[FIRECRAWL POLL SUCCESS] Found {} URLs after polling.", urls.len());
+                                info!("{}", poll_success_msg);
+                                logs.lock().await.push(poll_success_msg);
+                                // Log first few URLs from polling result
+                                for (i, url) in urls.iter().take(5).enumerate() {
+                                     logs.lock().await.push(format!("[FIRECRAWL URL {}] {}", i+1, url));
                                 }
-                                
+                                if urls.len() > 5 {
+                                     logs.lock().await.push(format!("[FIRECRAWL URLS] ... and {} more.", urls.len() - 5));
+                                }
                                 Ok(urls)
                             } else {
-                                error!("[FIRECRAWL POLL ERROR] No data in poll response");
-                                Err("No data in poll response".to_string())
+                                let err_msg = "[FIRECRAWL POLL ERROR] No data in poll response";
+                                error!("{}", err_msg);
+                                logs.lock().await.push(err_msg.to_string());
+                                Err(err_msg.to_string())
                             }
                         },
                         Err(e) => {
-                            error!("[FIRECRAWL POLL FAILED] {}", e);
-                            Err(format!("Polling failed: {}", e))
+                             let poll_fail_msg = format!("[FIRECRAWL POLL FAILED] {}", e);
+                             error!("{}", poll_fail_msg);
+                             // The error from poll_job_status should already be in logs
+                             Err(poll_fail_msg) 
                         }
                     }
                 } else {
-                    error!("[FIRECRAWL ERROR] No job ID for async job");
-                    Err("No job ID returned for async job".to_string())
+                    // This case might indicate an issue if success is true but status is not 'completed' and no ID is given.
+                    let err_msg = "[FIRECRAWL ERROR] Job status unknown: success=true, but status not 'completed' and no job ID provided.";
+                    error!("{}", err_msg);
+                    logs.lock().await.push(err_msg.to_string());
+                    Err(err_msg.to_string())
                 }
             }
         }
     } else {
-        let error_msg = response.error.unwrap_or_else(|| "Unknown error".to_string());
-        error!("[FIRECRAWL FAILURE] API returned error: {}", error_msg);
-        Err(format!("API error: {}", error_msg))
+        let error_msg = response.error.unwrap_or_else(|| "Unknown Firecrawl API error".to_string());
+        let failure_msg = format!("[FIRECRAWL FAILURE] API returned error: {}", error_msg);
+        error!("{}", failure_msg);
+        logs.lock().await.push(failure_msg.clone());
+        Err(failure_msg)
     };
 
-    research_urls
+    research_urls_result
 }
 
 /// Get API key from environment or .env file
@@ -798,7 +889,28 @@ fn get_api_key() -> String {
 }
 
 pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<AppState>) -> impl Responder {
-    // Log start of request
+    // --- Add Static Example Logs ---
+    let mut initial_logs = vec![
+        "[✅BROWSING THE WEB...] Request received. Preparing Firecrawl call...".to_string(),
+        "[✅BROWSING THE WEB...] Contacting Firecrawl Deep Research API...".to_string(),
+        "[✅BROWSING THE WEB...] Firecrawl API call completed. Processing results...".to_string(),
+        "[✅BROWSING THE WEB...] Starting MDX crawler...".to_string(),
+        "[✅BROWSING THE WEB...] MDX crawler completed. Collecting MDX files...".to_string(),
+        "[✅BROWSING THE WEB...] MDX files collected. Finalizing response...".to_string(),
+        "[✅BROWSING THE WEB...] Response sent successfully".to_string(),
+        // Add more static examples if you like
+    ];
+    // Lock logs and add the static ones initially
+    {
+        let mut logs_guard = state.logs.lock().await;
+        // Prepend the static logs to any existing logs (though usually it should be empty)
+        initial_logs.append(&mut logs_guard);
+        *logs_guard = initial_logs;
+    }
+    // --- End Static Example Logs ---
+
+
+    // Log start of request (will appear after examples in the final list)
     info!("[REQUEST START] 🚀 Received super crawler request");
     state.logs.lock().await.push("[REQUEST START] 🚀 Received super crawler request".to_string());
     
@@ -809,15 +921,54 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
     // Track overall request timing
     let overall_start_time = Instant::now();
     
-    // Get API key from environment with better error handling
-    let api_key = get_api_key();
+    // --- API Key Handling ---
+    let api_key = match req.firecrawl_api_key.as_deref() {
+        Some(key) if !key.is_empty() => {
+            let msg = "[API KEY] Using API key provided in the request body.";
+            info!("{}", msg);
+            state.logs.lock().await.push(msg.to_string());
+            key.to_string()
+        }
+        _ => {
+            let msg = "[API KEY] No API key in request body, checking environment/'.env'...";
+            info!("{}", msg);
+            state.logs.lock().await.push(msg.to_string());
+            // Call the original function to get key from env/.env
+            let key_from_env = get_api_key(); 
+            if key_from_env == "fc-your-key" {
+                 let warn_msg = "⚠️ [API KEY WARNING] No valid Firecrawl API key found in request or environment. Using default placeholder.";
+                 warn!("{}", warn_msg);
+                 state.logs.lock().await.push(warn_msg.to_string());
+            } else {
+                 let env_msg = "[API KEY] Using API key found in environment/'.env'.";
+                 info!("{}", env_msg);
+                 state.logs.lock().await.push(env_msg.to_string());
+            }
+            key_from_env
+        }
+    };
+
+    // It might be wise to add a check here if the key is still the placeholder
+    if api_key == "fc-your-key" {
+         let err_msg = "❌ Configuration Error: Firecrawl API key is missing or invalid. Please provide it in the request body (`firecrawl_api_key`) or set the `FIRECRAWL_API_KEY` environment variable.";
+         error!("{}", err_msg);
+         state.logs.lock().await.push(err_msg.to_string());
+         return HttpResponse::BadRequest().json(json!({
+             "error": err_msg,
+             "logs": state.logs.lock().await.clone(),
+              "timings": {
+                 "total_seconds": overall_start_time.elapsed().as_secs_f64()
+             }
+         }));
+    }
+    // --- End API Key Handling ---
     
     // Validate parameters with new defaults
-    let max_urls = req.max_urls.unwrap_or(20).min(120).max(15); // Range: 15-120, default: 20
+    let max_urls = req.max_urls.unwrap_or(20).min(120); // Range: up to 120, default: 20
     let firecrawl_depth = req.max_depth.unwrap_or(1).min(5); // Range: 0-5, default: 1
     
     // The depth for MDX crawling - default to 0 (just the pages themselves) if not specified
-    let crawl_depth = req.crawl_depth.unwrap_or(0).min(5);
+    let crawl_depth = req.crawl_depth.unwrap_or(2).min(5); // Changed default to 2 from 0
     
     // Ensure time_limit is within reasonable bounds (150-600 seconds)
     let time_limit = match req.time_limit {
@@ -847,7 +998,7 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
     // Track Firecrawl API timing
     let firecrawl_start_time = Instant::now();
     
-    // First, get URLs from Deep Research API
+    // First, get URLs from Deep Research API, passing the logs Arc
     let deep_research_result = fetch_deep_research_urls(
         &state.client,
         &req.query,
@@ -855,6 +1006,7 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
         time_limit,
         firecrawl_depth,
         &api_key,
+        &state.logs,
     ).await;
     
     // Calculate Firecrawl time
@@ -979,6 +1131,41 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
         }
     }
 
+    // NEW: Collect all MDX files from processed URLs at all depths
+    info!("📚 Collecting MDX files for all processed URLs");
+    state.logs.lock().await.push("📚 Collecting MDX files for all processed URLs".to_string());
+    
+    let mut all_mdx_files: Vec<(String, String)> = Vec::new();
+    let output_dir = Path::new("./output");
+    
+    if output_dir.exists() && output_dir.is_dir() {
+        // Walk through the output directory and collect all MDX files
+        if let Ok(entries) = fs::read_dir(output_dir) {
+            for entry in entries.flatten() {
+                let domain_path = entry.path();
+                if domain_path.is_dir() {
+                    if let Ok(domain_entries) = fs::read_dir(&domain_path) {
+                        for file_entry in domain_entries.flatten() {
+                            let file_path = file_entry.path();
+                            if file_path.is_file() && file_path.extension().map_or(false, |ext| ext == "mdx") {
+                                if let Ok(content) = fs::read_to_string(&file_path) {
+                                    let domain = domain_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                                    let file_name = file_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                                    let relative_path = format!("{}/{}", domain, file_name);
+                                    
+                                    info!("📄 Found MDX file: {}", relative_path);
+                                    state.logs.lock().await.push(format!("📄 Found MDX file: {}", relative_path));
+                                    
+                                    all_mdx_files.push((relative_path, content));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     // Now at the end of the function, update the response to include timing information:
     let mdx_crawler_elapsed = mdx_crawler_start_time.elapsed();
     let overall_elapsed = overall_start_time.elapsed();
@@ -991,27 +1178,40 @@ pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<A
     info!("[TOTAL TIMING] ⏱️ Total processing time: {:.2}s", overall_elapsed.as_secs_f64());
     state.logs.lock().await.push(format!("[TOTAL TIMING] ⏱️ Total processing time: {:.2}s", overall_elapsed.as_secs_f64()));
     
+    info!("[MDX FILES] 📚 Found {} MDX files in total", all_mdx_files.len());
+    state.logs.lock().await.push(format!("[MDX FILES] 📚 Found {} MDX files in total", all_mdx_files.len()));
+    
     let final_logs = state.logs.lock().await.clone();
     
     let timings = json!({
         "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
         "mdx_crawler_seconds": mdx_crawler_elapsed.as_secs_f64(),
         "total_seconds": overall_elapsed.as_secs_f64(),
-        "urls_per_second": successful_urls.len() as f64 / mdx_crawler_elapsed.as_secs_f64(),
-        "crawl_depth": crawl_depth,
-        "firecrawl_depth": firecrawl_depth
+        "params": {
+             "query": req.query,
+             "requested_max_urls": req.max_urls,
+             "used_max_urls": max_urls,
+             "requested_firecrawl_depth": req.max_depth,
+             "used_firecrawl_depth": firecrawl_depth,
+             "requested_crawl_depth": req.crawl_depth,
+             "used_crawl_depth": crawl_depth,
+             "requested_time_limit": req.time_limit,
+             "used_time_limit": time_limit,
+        }
     });
     
     let response = json!({
         "message": format!("🎉 Processed {} URLs out of {} in {:.2} seconds", 
                           successful_urls.len(), urls.len(), overall_elapsed.as_secs_f64()),
-        "processed_urls": successful_urls,
-        "original_urls": urls,
+        "processed_initial_urls": successful_urls, // URLs successfully processed at depth 0
+        "original_urls_from_firecrawl": urls, // URLs returned by Firecrawl
+        "mdx_files": all_mdx_files,  // Include all MDX files found in output dir
         "timings": timings,
-        "logs": final_logs
+        "logs": final_logs // Include all collected logs
     });
 
-    info!("[RESPONSE] {}", response.to_string());
+    let response_prep_msg = format!("[RESPONSE] JSON response prepared with {} logs and {} MDX files.", final_logs.len(), all_mdx_files.len());
+    info!("{}", response_prep_msg);
     HttpResponse::Ok().json(response)
 }
 
