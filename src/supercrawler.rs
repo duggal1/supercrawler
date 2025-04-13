@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpServer, HttpResponse, Responder};
+use actix_web::{web, App, HttpServer, HttpResponse, Responder, rt::spawn};
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
 use tokio::sync::{mpsc, Semaphore};
@@ -14,17 +14,18 @@ use std::path::Path;
 use tempfile::NamedTempFile;
 use log::{info, error, warn, debug};
 use std::time::{Duration, Instant};
-use futures::future::select_all;
+use futures_util::{future::select_all, stream::StreamExt};
 use std::env;
 use serde_json::json;
 use tokio::time::sleep;
-
+use actix_web_lab::sse::{self, Sse, Event, Data};
+use std::convert::Infallible;
+use tokio_stream::wrappers::ReceiverStream;
+use std::io::Error as IoError;
 
 pub struct AppState {
     pub client: Client,
     pub semaphore: Arc<Semaphore>,
-    pub tx: mpsc::Sender<(String, usize, usize, String)>,
-    pub logs: Arc<tokio::sync::Mutex<Vec<String>>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -75,13 +76,6 @@ struct DeepResearchResponse {
     id: Option<String>,
     error: Option<String>,
     message: Option<String>,
-}
-
-struct CrawlerState {
-    client: Client,
-    semaphore: Arc<Semaphore>,
-    tx: mpsc::Sender<(String, usize, usize, String)>,
-    logs: Arc<tokio::sync::Mutex<Vec<String>>>,
 }
 
 fn element_to_markdown(element: ElementRef) -> String {
@@ -638,25 +632,47 @@ async fn fetch_pdf(client: &Client, url: &str) -> Option<String> {
     extract_text(temp_file.path()).ok()
 }
 
+/// Helper to send SSE log messages
+async fn sse_log(tx: &mpsc::Sender<Result<Event, Infallible>>, level: &str, message: String) {
+    info!("[{}] {}", level, message); // Keep server-side logging
+    let event = Event::Data(Data::new(format!("[{}] {}", level, message)).event("log"));
+    if tx.send(Ok(event)).await.is_err() {
+        // Log error if client disconnected, but don't crash the task
+        warn!("Failed to send log event to client (disconnected?)");
+    }
+}
+
+async fn sse_log_info(tx: &mpsc::Sender<Result<Event, Infallible>>, message: String) {
+    sse_log(tx, "INFO", message).await;
+}
+
+async fn sse_log_warn(tx: &mpsc::Sender<Result<Event, Infallible>>, message: String) {
+    sse_log(tx, "WARN", message).await;
+}
+
+async fn sse_log_error(tx: &mpsc::Sender<Result<Event, Infallible>>, message: String) {
+    sse_log(tx, "ERROR", message).await;
+}
+
 async fn process_url(
     client: &Client,
     semaphore: &Arc<Semaphore>,
     url: String,
-    logs: &Arc<tokio::sync::Mutex<Vec<String>>>,
+    tx: &mpsc::Sender<Result<Event, Infallible>>, // Added SSE sender
 ) -> (Option<String>, Vec<String>) {
     let _permit = match semaphore.acquire().await {
         Ok(permit) => permit,
         Err(_) => {
-            error!("Failed to acquire semaphore permit for {}", url);
+            let err_msg = format!("Failed to acquire semaphore permit for {}", url);
+            sse_log_error(tx, err_msg).await;
             return (None, Vec::new());
         }
     };
-    info!("Processing URL: {}", url);
-    logs.lock().await.push(format!("Processing: {}", url));
+    sse_log_info(tx, format!("Processing URL: {}", url)).await;
 
     let max_retries = 3;
     let mut attempt = 0;
-    let mut base_delay_ms = 500;
+    let base_delay_ms = 500;
     let resp = loop {
         attempt += 1;
         match client.get(&url).send().await {
@@ -667,12 +683,11 @@ async fn process_url(
 
                 if is_connect_error && attempt < max_retries {
                     let delay_ms = base_delay_ms * 2_u64.pow(attempt as u32 - 1);
-                    warn!("{} - Retrying in {}ms...", err_msg, delay_ms);
-                    logs.lock().await.push(format!("{} - Retrying in {}ms...", err_msg, delay_ms));
+                    let retry_msg = format!("{} - Retrying in {}ms...", err_msg, delay_ms);
+                    sse_log_warn(tx, retry_msg).await;
                     sleep(Duration::from_millis(delay_ms)).await;
                 } else {
-                    error!("{}", err_msg);
-                    logs.lock().await.push(err_msg);
+                    sse_log_error(tx, err_msg).await;
                     break Err(e);
                 }
             }
@@ -681,12 +696,12 @@ async fn process_url(
 
     let resp = match resp {
         Ok(r) => r,
-        Err(_) => return (None, Vec::new()),
+        Err(_) => return (None, Vec::new()), // Error already logged
     };
 
     if !resp.status().is_success() {
-        error!("Request failed for {} with status: {}", url, resp.status());
-        logs.lock().await.push(format!("Request failed for {} with status: {}", url, resp.status()));
+        let err_msg = format!("Request failed for {} with status: {}", url, resp.status());
+        sse_log_error(tx, err_msg).await;
         return (None, Vec::new());
     }
 
@@ -697,51 +712,86 @@ async fn process_url(
 
     let mut mdx_content: Option<String> = None;
     let mut extracted_urls: Vec<String> = Vec::new();
+    let mut content_was_generated = false; // Flag to track if we attempted generation
 
     if content_type.contains("application/pdf") {
-        info!("Fetching PDF content from {}", url);
+        sse_log_info(tx, format!("Fetching PDF content from {}", url)).await;
         if let Some(pdf_text) = fetch_pdf(client, &url).await {
             let pdf_mdx = format!(
                 "---\ntitle: \"PDF Document: {}\"\ndescription: \"Extracted text from PDF.\"\nsourceUrl: \"{}\"\n---\n\n{}",
                  url.split('/').last().unwrap_or("document.pdf"), url, pdf_text
             );
             mdx_content = Some(pdf_mdx);
+            content_was_generated = true; // Mark that we generated content
         } else {
-             error!("Failed to extract text from PDF: {}", url);
-             logs.lock().await.push(format!("Failed to extract text from PDF: {}", url));
+            let err_msg = format!("Failed to extract text from PDF: {}", url);
+            sse_log_error(tx, err_msg).await;
         }
     } else if content_type.contains("text/html") {
-        info!("Fetching HTML content from {}", url);
+        sse_log_info(tx, format!("Fetching HTML content from {}", url)).await;
         match resp.text_with_charset("utf-8").await {
             Ok(html_content) => {
                  mdx_content = Some(clean_to_mdx(&html_content, &url));
-                extracted_urls = fetch_and_extract_urls(client, &url).await;
+                 content_was_generated = true; // Mark that we generated content
+                 let base_url_res = Url::parse(&url);
+                 if let Ok(base_url) = base_url_res {
+                    let doc = Html::parse_document(&html_content);
+                    let selector = Selector::parse("a[href]").unwrap();
+                    for element in doc.select(&selector) {
+                        if let Some(href) = element.value().attr("href") {
+                            let trimmed_href = href.trim();
+                            if trimmed_href.is_empty() || trimmed_href.starts_with('#') || trimmed_href.starts_with("javascript:") || trimmed_href.starts_with("mailto:") {
+                                continue;
+                            }
+                            match base_url.join(trimmed_href) {
+                                Ok(mut abs_url) => {
+                                    abs_url.set_fragment(None);
+                                    extracted_urls.push(abs_url.to_string());
+                                }
+                                Err(e) => {
+                                     let warn_msg = format!("Failed to join URL '{}' with base '{}': {}", href, base_url, e);
+                                     sse_log_warn(tx, warn_msg).await;
+                                }
+                            }
+                        }
+                    }
+                 } else {
+                     sse_log_warn(tx, format!("Could not parse base URL for extraction: {}", url)).await;
+                 }
             }
             Err(e) => {
-                 error!("Failed to read HTML text from response for {}: {}", url, e);
-                 logs.lock().await.push(format!("Failed to read HTML text from response for {}: {}", url, e));
+                 let err_msg = format!("Failed to read HTML text from response for {}: {}", url, e);
+                 sse_log_error(tx, err_msg).await;
             }
         }
     } else {
-        info!("Skipping unsupported content type '{}' for URL: {}", content_type, url);
-         logs.lock().await.push(format!("Skipping unsupported content type '{}' for URL: {}", content_type, url));
+        let skip_msg = format!("Skipping unsupported content type '{}' for URL: {}", content_type, url);
+        sse_log_info(tx, skip_msg).await;
     }
 
-    let saved_filename = if let Some(mdx) = mdx_content {
-        if !mdx.is_empty() {
-            save_mdx(&url, &mdx)
-        } else {
-             warn!("Generated MDX was empty for URL: {}", url);
-             logs.lock().await.push(format!("Generated MDX was empty for URL: {}", url));
-            None
-        }
-    } else {
-        None
-    };
+    // --- Saving Logic ---
+    let mut saved_filename: Option<String> = None;
 
+    if let Some(mdx) = mdx_content { // Consume mdx_content if it's Some
+        if !mdx.trim().is_empty() {
+            saved_filename = save_mdx(&url, &mdx); // save_mdx logs its own file saving errors
+        } else {
+             let warn_msg = format!("Generated MDX was empty for URL: {}", url);
+             sse_log_warn(tx, warn_msg).await;
+             // saved_filename remains None
+        }
+    } // mdx_content is dropped here if it was Some
+
+    // --- Logging Save Status ---
     if saved_filename.is_some() {
-         info!("Successfully processed and saved: {}", url);
-        logs.lock().await.push(format!("Successfully processed: {}", url));
+        let success_msg = format!("Successfully processed and saved: {}", url);
+        sse_log_info(tx, success_msg).await;
+    } else if content_was_generated {
+        // Log only if we generated content but didn't save it (and it wasn't empty, which was logged above)
+        // This implies save_mdx failed, and it should have logged the specific file error.
+        // Adding another generic log might be redundant.
+        // We can rely on save_mdx logging for file errors.
+        debug!("Content generated for {} but not saved (save_mdx should have logged file error, or content was empty)", url);
     }
 
     (saved_filename, extracted_urls)
@@ -751,11 +801,10 @@ async fn poll_job_status(
     client: &Client,
     job_id: &str,
     api_key: &str,
-    logs: &Arc<tokio::sync::Mutex<Vec<String>>>,
+    tx: &mpsc::Sender<Result<Event, Infallible>>, // Added SSE sender
 ) -> Result<DeepResearchResponse, String> {
     let log_prefix = format!("[POLLING JOB {}]", job_id);
-    info!("{log_prefix} 😍 Starting polling");
-    logs.lock().await.push(format!("{log_prefix} 😍 Starting polling"));
+    sse_log_info(tx, format!("{log_prefix} 😍 Starting polling")).await;
 
     let start_time = Instant::now();
     let url = format!("https://api.firecrawl.dev/v1/deep-research/{}", job_id);
@@ -765,8 +814,7 @@ async fn poll_job_status(
 
     while start_time.elapsed() < max_duration {
         let msg = format!("{log_prefix} ✅ Checking status (Attempt {})", retry_count + 1);
-        info!("{}", msg);
-        logs.lock().await.push(msg);
+        sse_log_info(tx, msg).await;
 
         match client.get(&url)
             .header("Authorization", format!("Bearer {}", api_key))
@@ -776,16 +824,14 @@ async fn poll_job_status(
                 Ok(response) => {
                     let status_code = response.status();
                     let msg = format!("{log_prefix} RESPONSE Status code: {}", status_code);
-                    info!("{}", msg);
-                    logs.lock().await.push(msg);
+                    sse_log_info(tx, msg).await;
 
-                    retry_count = 0;
+                    retry_count = 0; // Reset retries on successful request
 
                     if !status_code.is_success() {
                         let error_text = response.text().await.unwrap_or_default();
                         let err_msg = format!("{log_prefix} ⚠️ Non-success status code: {}. Body: {}", status_code, error_text);
-                        warn!("{}", err_msg);
-                        logs.lock().await.push(err_msg.clone());
+                        sse_log_warn(tx, err_msg.clone()).await;
                         return Err(err_msg);
                     }
 
@@ -793,8 +839,7 @@ async fn poll_job_status(
                          Ok(b) => b,
                          Err(e) => {
                              let err_msg = format!("{log_prefix} ❌ Failed to read response body bytes: {}", e);
-                             error!("{}", err_msg);
-                             logs.lock().await.push(err_msg.clone());
+                             sse_log_error(tx, err_msg.clone()).await;
                              return Err(err_msg);
                          }
                      };
@@ -804,56 +849,49 @@ async fn poll_job_status(
                             let success_msg = format!("{log_prefix} ✔️ Parsed Status: {:?}, Success: {}",
                                 status_data.status,
                                 status_data.success);
-                            info!("{}", success_msg);
-                            logs.lock().await.push(success_msg);
+                            sse_log_info(tx, success_msg).await;
 
                             if let Some(status) = &status_data.status {
                                 if status == "completed" {
                                     let complete_msg = format!("{log_prefix} ✅ Job completed successfully");
-                                    info!("{}", complete_msg);
-                                    logs.lock().await.push(complete_msg);
+                                    sse_log_info(tx, complete_msg).await;
                                     return Ok(status_data);
                                 }
                             }
 
                             let wait_msg = format!("{log_prefix} 🚧 Status not 'completed', waiting 3s...");
-                            info!("{}", wait_msg);
-                            logs.lock().await.push(wait_msg);
+                            sse_log_info(tx, wait_msg).await;
                             tokio::time::sleep(Duration::from_secs(3)).await;
                         },
                         Err(e) => {
                             let raw_body = String::from_utf8_lossy(&body_bytes);
                             let err_msg = format!("{log_prefix} ❌ Failed to parse JSON response: {}. Raw: {}", e, raw_body);
-                            error!("{}", err_msg);
-                            logs.lock().await.push(err_msg.clone());
+                            sse_log_error(tx, err_msg.clone()).await;
                             return Err(err_msg);
                         }
                     }
                 },
                 Err(e) => {
                     retry_count += 1;
-                    let retry_delay = 2_u64.pow(retry_count as u32) * 375;
+                    let retry_delay = 2_u64.pow(retry_count as u32) * 375; // Exponential backoff
                     let err_msg = format!("{log_prefix} ❌ Request error: {} (Retry {}/{})", e, retry_count, max_retries);
-                    error!("{}", err_msg);
-                    logs.lock().await.push(err_msg.clone());
+                    sse_log_error(tx, err_msg.clone()).await;
 
                     if retry_count >= max_retries {
                         let final_err = format!("{log_prefix} ❌ Failed after {} retries: {}", max_retries, e);
-                         logs.lock().await.push(final_err.clone());
+                         sse_log_error(tx, final_err.clone()).await;
                         return Err(final_err);
                     }
 
                     let retry_msg = format!("{log_prefix} ⏳ Waiting {}ms before retry #{}", retry_delay, retry_count + 1);
-                    info!("{}", retry_msg);
-                    logs.lock().await.push(retry_msg);
+                    sse_log_info(tx, retry_msg).await;
                     tokio::time::sleep(Duration::from_millis(retry_delay)).await;
                 }
             }
     }
 
     let timeout_msg = format!("{log_prefix} ⚠️ Job polling timed out after {}s", start_time.elapsed().as_secs());
-    error!("{}", timeout_msg);
-    logs.lock().await.push(timeout_msg.clone());
+    sse_log_error(tx, timeout_msg.clone()).await;
     Err(timeout_msg)
 }
 
@@ -864,28 +902,26 @@ async fn fetch_deep_research_urls(
     time_limit: u32,
     max_depth: usize,
     api_key: &str,
-    logs: &Arc<tokio::sync::Mutex<Vec<String>>>,
+    tx: &mpsc::Sender<Result<Event, Infallible>>, // Added SSE sender
 ) -> Result<Vec<String>, String> {
     let firecrawl_url = "https://api.firecrawl.dev/v1/deep-research";
 
     let start_msg = "[FIRECRAWL START] 🔥 Initiating deep research API call";
-    info!("{}", start_msg);
-    logs.lock().await.push(start_msg.to_string());
+    sse_log_info(tx, start_msg.to_string()).await;
 
     let req_details = format!("[FIRECRAWL REQUEST] Query: {}, Max URLs: {}, Time Limit: {}s, Max Depth: {}",
                               query, max_urls, time_limit, max_depth);
-    info!("{}", req_details);
-    logs.lock().await.push(req_details);
+    sse_log_info(tx, req_details).await;
 
-    let validated_time_limit = if time_limit < 150 { 150 } else if time_limit > 600 { 600 } else { time_limit };
-    let validated_max_depth = if max_depth > 5 { 5 } else { max_depth };
-    let validated_max_urls = if max_urls < 5 { 5 } else if max_urls > 120 { 120 } else { max_urls };
+    // Apply constraints
+    let validated_time_limit = time_limit.clamp(150, 600);
+    let validated_max_depth = max_depth.clamp(1, 5); // Assuming min depth 1
+    let validated_max_urls = max_urls.clamp(5, 120);
 
     if validated_time_limit != time_limit || validated_max_depth != max_depth || validated_max_urls != max_urls {
          let validation_msg = format!("[FIRECRAWL VALIDATED PARAMS] Using MaxUrls: {}, TimeLimit: {}, MaxDepth: {}",
                                       validated_max_urls, validated_time_limit, validated_max_depth);
-         info!("{}", validation_msg);
-         logs.lock().await.push(validation_msg);
+         sse_log_info(tx, validation_msg).await;
     }
 
     let payload = json!({
@@ -896,14 +932,13 @@ async fn fetch_deep_research_urls(
     });
 
     let payload_msg = format!("[FIRECRAWL PAYLOAD] {}", payload.to_string());
-    info!("{}", payload_msg);
-    logs.lock().await.push(payload_msg);
+    sse_log_info(tx, payload_msg).await;
 
     let response_result = client
         .post(firecrawl_url)
         .header("Authorization", format!("Bearer {}", api_key))
         .header("Content-Type", "application/json")
-        .timeout(Duration::from_secs(60))
+        .timeout(Duration::from_secs(60)) // Initial request timeout
         .json(&payload)
         .send()
         .await;
@@ -912,107 +947,96 @@ async fn fetch_deep_research_urls(
         Ok(resp) => {
             let status = resp.status();
             let status_msg = format!("[FIRECRAWL RESPONSE] Initial Status: {}", status);
-            info!("{}", status_msg);
-            logs.lock().await.push(status_msg);
+            sse_log_info(tx, status_msg).await;
 
             if !status.is_success() {
                 let error_text = resp.text().await.unwrap_or_default();
                 let err_msg = format!("[FIRECRAWL ERROR] Status: {}. Body: {}", status, error_text);
-                error!("{}", err_msg);
-                logs.lock().await.push(err_msg.clone());
+                sse_log_error(tx, err_msg.clone()).await;
                 return Err(err_msg);
             }
 
-            let body_bytes = match resp.bytes().await {
+             let body_bytes = match resp.bytes().await {
                  Ok(b) => b,
                  Err(e) => {
                      let err_msg = format!("[FIRECRAWL ERROR] Failed to read initial response body bytes: {}", e);
-                     error!("{}", err_msg);
-                     logs.lock().await.push(err_msg.clone());
+                     sse_log_error(tx, err_msg.clone()).await;
                      return Err(err_msg);
                  }
              };
 
-            let body_log_msg = format!("[FIRECRAWL RESPONSE BODY] Received initial response body (length: {})", body_bytes.len());
-            info!("{}", body_log_msg);
-            logs.lock().await.push(body_log_msg);
+             let body_log_msg = format!("[FIRECRAWL RESPONSE BODY] Received initial response body (length: {})", body_bytes.len());
+             sse_log_info(tx, body_log_msg).await;
 
             match serde_json::from_slice::<DeepResearchResponse>(&body_bytes) {
                 Ok(parsed) => parsed,
                 Err(e) => {
                     let raw_body = String::from_utf8_lossy(&body_bytes);
                     let err_msg = format!("[FIRECRAWL JSON PARSE ERROR] Failed: {}. Raw: {}", e, raw_body);
-                    error!("{}", err_msg);
-                    logs.lock().await.push(err_msg.clone());
+                    sse_log_error(tx, err_msg.clone()).await;
                     return Err(err_msg);
                 }
             }
         },
         Err(e) => {
             let err_msg = format!("[FIRECRAWL REQUEST ERROR] {}", e);
-            error!("{}", err_msg);
-            logs.lock().await.push(err_msg.clone());
+            sse_log_error(tx, err_msg.clone()).await;
             return Err(err_msg);
         }
     };
 
+    // Process response (polling if necessary)
     let research_urls_result = if response.success {
         match response.status.as_deref() {
             Some("completed") => {
                 let completed_msg = "[FIRECRAWL SUCCESS] Research completed immediately in initial response.";
-                info!("{}", completed_msg);
-                logs.lock().await.push(completed_msg.to_string());
+                sse_log_info(tx, completed_msg.to_string()).await;
 
                 if let Some(data) = response.data {
                     let urls: Vec<String> = data.sources.into_iter().map(|s| s.url).collect();
                     let urls_msg = format!("[FIRECRAWL URLS] Found {} URLs directly.", urls.len());
-                    info!("{}", urls_msg);
-                    logs.lock().await.push(urls_msg);
+                    sse_log_info(tx, urls_msg).await;
                     for (i, url) in urls.iter().take(5).enumerate() {
-                         logs.lock().await.push(format!("[FIRECRAWL URL {}] {}", i+1, url));
+                         sse_log_info(tx, format!("[FIRECRAWL URL {}] {}", i+1, url)).await;
                     }
                     if urls.len() > 5 {
-                         logs.lock().await.push(format!("[FIRECRAWL URLS] ... and {} more.", urls.len() - 5));
+                         sse_log_info(tx, format!("[FIRECRAWL URLS] ... and {} more.", urls.len() - 5)).await;
                     }
                     Ok(urls)
                 } else {
                     let err_msg = "[FIRECRAWL ERROR] Missing data in completed response";
-                    error!("{}", err_msg);
-                    logs.lock().await.push(err_msg.to_string());
+                    sse_log_error(tx, err_msg.to_string()).await;
                     Err(err_msg.to_string())
                 }
             },
-            _ => {
+            _ => { // Includes "pending", "running", etc. or missing status
                 if let Some(job_id) = response.id {
                     let async_msg = format!("[FIRECRAWL ASYNC] 🚀 Job started, polling ID: {}", job_id);
-                    info!("{}", async_msg);
-                    logs.lock().await.push(async_msg);
+                    sse_log_info(tx, async_msg).await;
 
-                    match poll_job_status(client, &job_id, api_key, logs).await {
+                    match poll_job_status(client, &job_id, api_key, tx).await { // Pass tx
                         Ok(poll_result) => {
                             if let Some(data) = poll_result.data {
                                 let urls: Vec<String> = data.sources.into_iter().map(|s| s.url).collect();
                                 let poll_success_msg = format!("[FIRECRAWL POLL SUCCESS] Found {} URLs after polling.", urls.len());
-                                info!("{}", poll_success_msg);
-                                logs.lock().await.push(poll_success_msg);
+                                sse_log_info(tx, poll_success_msg).await;
                                 Ok(urls)
                             } else {
                                 let err_msg = "[FIRECRAWL POLL ERROR] No data in poll response";
-                                error!("{}", err_msg);
-                                logs.lock().await.push(err_msg.to_string());
+                                sse_log_error(tx, err_msg.to_string()).await;
                                 Err(err_msg.to_string())
                             }
                         },
                         Err(e) => {
+                             // poll_job_status already logs errors
                              let poll_fail_msg = format!("[FIRECRAWL POLL FAILED] {}", e);
-                             error!("{}", poll_fail_msg);
+                             // sse_log_error(tx, poll_fail_msg.clone()).await; // Avoid double logging
                              Err(poll_fail_msg)
                         }
                     }
                 } else {
                     let err_msg = "[FIRECRAWL ERROR] Job status unknown: success=true, but status not 'completed' and no job ID provided.";
-                    error!("{}", err_msg);
-                    logs.lock().await.push(err_msg.to_string());
+                    sse_log_error(tx, err_msg.to_string()).await;
                     Err(err_msg.to_string())
                 }
             }
@@ -1020,8 +1044,7 @@ async fn fetch_deep_research_urls(
     } else {
         let error_msg = response.error.unwrap_or_else(|| "Unknown Firecrawl API error".to_string());
         let failure_msg = format!("[FIRECRAWL FAILURE] API returned error: {}", error_msg);
-        error!("{}", failure_msg);
-        logs.lock().await.push(failure_msg.clone());
+        sse_log_error(tx, failure_msg.clone()).await;
         Err(failure_msg)
     };
 
@@ -1031,22 +1054,15 @@ async fn fetch_deep_research_urls(
 fn get_api_key() -> String {
     match env::var("FIRECRAWL_API_KEY") {
         Ok(key) => {
-            if key.is_empty() || key == "fc-your-key" {
-                warn!("⚠️ FIRECRAWL_API_KEY environment variable is empty or default");
-                "fc-your-key".to_string()
-            } else {
-                 if key.len() >= 10 {
-                     let masked_key = format!("{}...{}", &key[0..5], &key[key.len()-5..]);
-                     info!("[ENV] Using Firecrawl API key: {}", masked_key);
-                 } else {
-                     info!("[ENV] Using Firecrawl API key (short key)");
-                 }
-                key
-            }
+             if key.is_empty() || key == "fc-your-key" {
+                 // warn!("⚠️ FIRECRAWL_API_KEY environment variable is empty or default"); // Log in caller
+                 "fc-your-key".to_string()
+             } else {
+                 key
+             }
         },
-        Err(e) => {
-            warn!("⚠️ Failed to get FIRECRAWL_API_KEY from environment: {}", e);
-
+        Err(_) => {
+            // warn!("⚠️ Failed to get FIRECRAWL_API_KEY from environment: {}", e); // Log in caller
             if let Ok(content) = fs::read_to_string(".env") {
                 for line in content.lines() {
                     if line.starts_with("FIRECRAWL_API_KEY=") {
@@ -1054,349 +1070,362 @@ fn get_api_key() -> String {
                          if key_parts.len() == 2 {
                             let key = key_parts[1].trim().trim_matches(|c| c == '"' || c == '\'');
                              if !key.is_empty() && key != "fc-your-key" {
-                                info!("[ENV] Found Firecrawl API key in .env file");
+                                // info!("[ENV] Found Firecrawl API key in .env file"); // Log in caller
                                 return key.to_string();
                             }
                          }
                     }
                 }
-                 warn!("⚠️ FIRECRAWL_API_KEY not found or invalid in .env file.");
+                 // warn!("⚠️ FIRECRAWL_API_KEY not found or invalid in .env file."); // Log in caller
             } else {
-                 warn!("⚠️ .env file not found or unreadable.");
+                 // warn!("⚠️ .env file not found or unreadable."); // Log in caller
             }
-
             "fc-your-key".to_string()
         }
     }
 }
 
-pub async fn super_crawl(req: web::Json<SuperCrawlerRequest>, state: web::Data<AppState>) -> impl Responder {
-    info!("[REQUEST START] 🚀 Received super crawler request");
-    state.logs.lock().await.push("[REQUEST START] 🚀 Received super crawler request".to_string());
+pub async fn super_crawl(
+    req: web::Json<SuperCrawlerRequest>,
+    state: web::Data<AppState>
+) -> Result<Sse<impl StreamExt<Item = Result<Event, Infallible>>>, actix_web::Error> {
 
-    let request_json = serde_json::to_string(&req).unwrap_or_default();
-    info!("[REQUEST BODY] {}", request_json);
-    state.logs.lock().await.push(format!("[REQUEST BODY] {}", request_json));
+    let (tx, rx) = mpsc::channel::<Result<Event, Infallible>>(200); // Channel for SSE events
 
-    let overall_start_time = Instant::now();
-    let logs = state.logs.clone();
+    let req_clone = req.into_inner(); // Clone request data early
+    let client = state.client.clone();
+    let semaphore = state.semaphore.clone();
+    // Note: AppState no longer contains logs or bg_tx
 
-    let api_key = match req.firecrawl_api_key.as_deref() {
-        Some(key) if !key.is_empty() => {
-            let msg = "[API KEY] Using API key provided in the request body.";
-            info!("{}", msg);
-            logs.lock().await.push(msg.to_string());
-            key.to_string()
-        }
-        _ => {
-            let msg = "[API KEY] No API key in request body, checking environment/'.env'...".to_string();
-            info!("{}", msg);
-            logs.lock().await.push(msg);
-            let key_from_env = get_api_key();
-            if key_from_env == "fc-your-key" {
-                 let warn_msg = "⚠️ [API KEY WARNING] No valid Firecrawl API key found. Using default placeholder.";
-                 warn!("{}", warn_msg);
-                 logs.lock().await.push(warn_msg.to_string());
-            } else {
-                 let env_msg = "[API KEY] Using API key found in environment/'.env'.";
-                 info!("{}", env_msg);
-                 logs.lock().await.push(env_msg.to_string());
+    // Spawn the actual work into a background task
+    spawn(async move {
+        let overall_start_time = Instant::now();
+        let tx_clone = tx.clone(); // Clone sender for the task
+
+        sse_log_info(&tx_clone, "[REQUEST START] 🚀 Received super crawler request".to_string()).await;
+
+        let request_json = serde_json::to_string(&req_clone).unwrap_or_default();
+        sse_log_info(&tx_clone, format!("[REQUEST BODY] {}", request_json)).await;
+
+        // --- API Key Handling & Logging ---
+        let api_key = match req_clone.firecrawl_api_key.as_deref() {
+            Some(key) if !key.is_empty() => {
+                let msg = "[API KEY] Using API key provided in the request body.";
+                sse_log_info(&tx_clone, msg.to_string()).await;
+                key.to_string()
             }
-            key_from_env
-        }
-    };
-
-    if api_key == "fc-your-key" {
-         let err_msg = "❌ Configuration Error: Firecrawl API key is missing or invalid.";
-         error!("{}", err_msg);
-         logs.lock().await.push(err_msg.to_string());
-         return HttpResponse::BadRequest().json(json!({
-             "error": err_msg,
-             "logs": logs.lock().await.clone(),
-              "timings": { "total_seconds": overall_start_time.elapsed().as_secs_f64() }
-         }));
-    }
-
-    let max_urls = req.max_urls.unwrap_or(20).min(120);
-    let firecrawl_depth = req.max_depth.unwrap_or(1).min(5);
-    let crawl_depth = req.crawl_depth.unwrap_or(2).min(5);
-    let time_limit_secs = match req.time_limit {
-        Some(t) if t >= 150 && t <= 600 => t,
-        Some(t) if t < 150 => { logs.lock().await.push(format!("[PARAM WARNING] Time limit {} too low, using minimum 150s", t)); 150 },
-        Some(t) if t > 600 => { logs.lock().await.push(format!("[PARAM WARNING] Time limit {} too high, using maximum 600s", t)); 600 },
-        _ => { logs.lock().await.push("[PARAM INFO] Using default time limit of 600s".to_string()); 600 }
-    };
-    let timeout_duration = Duration::from_secs(time_limit_secs as u64);
-
-    info!("[VALIDATED PARAMS] Query: {}, MaxUrls: {}, FirecrawlDepth: {}, CrawlDepth: {}, TimeLimit: {}",
-         req.query, max_urls, firecrawl_depth, crawl_depth, time_limit_secs);
-    logs.lock().await.push(format!("[VALIDATED PARAMS] Query: {}, MaxUrls: {}, FirecrawlDepth: {}, CrawlDepth: {}, TimeLimit: {}",
-                                       req.query, max_urls, firecrawl_depth, crawl_depth, time_limit_secs));
-
-    let firecrawl_start_time = Instant::now();
-    let deep_research_result = fetch_deep_research_urls(
-        &state.client, &req.query, max_urls, time_limit_secs, firecrawl_depth, &api_key, &logs,
-    ).await;
-    let firecrawl_elapsed = firecrawl_start_time.elapsed();
-    logs.lock().await.push(format!("[FIRECRAWL TIMING] ⏱️ Firecrawl API took {:.2}s", firecrawl_elapsed.as_secs_f64()));
-
-    let initial_urls = match deep_research_result {
-        Ok(urls) => {
-            logs.lock().await.push(format!("✅ Retrieved {} URLs from Deep Research API", urls.len()));
-            urls
-        },
-        Err(e) => {
-            logs.lock().await.push(format!("❌ Failed to fetch URLs from Firecrawl: {}", e));
-            return HttpResponse::InternalServerError().json(json!({
-                "error": format!("Failed to fetch URLs from Firecrawl: {}", e),
-                "logs": logs.lock().await.clone(),
-                "timings": {
-                    "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
-                    "total_seconds": overall_start_time.elapsed().as_secs_f64()
-                }
-            }));
-        }
-    };
-
-    if initial_urls.is_empty() {
-        logs.lock().await.push("⚠️ No URLs found from Deep Research API".to_string());
-        return HttpResponse::Ok().json(json!({
-            "message": "No URLs found from Firecrawl to process.",
-            "logs": logs.lock().await.clone(),
-            "mdx_files": [],
-            "timings": {
-                "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
-                "total_seconds": overall_start_time.elapsed().as_secs_f64()
-            }
-        }));
-    }
-
-    logs.lock().await.push(format!("[MDX CRAWL START] Starting MDX crawl for {} initial URLs up to depth {}", initial_urls.len(), crawl_depth));
-    let mdx_crawler_start_time = Instant::now();
-
-    let mut visited_urls = HashSet::<String>::new();
-    let mut urls_to_process = VecDeque::<(String, usize)>::new();
-    let mut mdx_results = Vec::<(String, String)>::new();
-    let mut processed_count = 0;
-
-    let target_domains = initial_urls.iter()
-        .filter_map(|url_str| Url::parse(url_str).ok()?.domain().map(|s| s.to_string()))
-        .collect::<HashSet<String>>();
-    logs.lock().await.push(format!("[MDX CRAWL SCOPE] Allowed domains: {:?}", target_domains));
-
-    for url_str in &initial_urls {
-        if let Ok(parsed_url) = Url::parse(url_str) {
-             let url_string = parsed_url.to_string();
-             if visited_urls.insert(url_string.clone()) {
-                 urls_to_process.push_back((url_string, 0));
-                 info!("Queueing initial MDX crawl URL: {}", url_str);
-             }
-        } else {
-             warn!("Ignoring invalid initial URL from Firecrawl: {}", url_str);
-             logs.lock().await.push(format!("Ignoring invalid initial URL from Firecrawl: {}", url_str));
-        }
-    }
-
-    let mut active_tasks = Vec::new();
-    let crawl_loop_start_time = Instant::now();
-    let mut last_log_time = Instant::now();
-
-    while !urls_to_process.is_empty() || !active_tasks.is_empty() {
-        if crawl_loop_start_time.elapsed() > timeout_duration {
-             warn!("MDX crawl phase timed out after {:.2}s", crawl_loop_start_time.elapsed().as_secs_f64());
-             logs.lock().await.push(format!("MDX crawl phase timed out after {:.2}s", crawl_loop_start_time.elapsed().as_secs_f64()));
-             break;
-        }
-
-        if last_log_time.elapsed() > Duration::from_secs(10) {
-            let queue_size = urls_to_process.len();
-            let active_count = active_tasks.len();
-            let permits = state.semaphore.available_permits();
-            let elapsed_crawl = crawl_loop_start_time.elapsed().as_secs_f32();
-            let log_msg = format!(
-                "[MDX CRAWL STATUS] {:.1}s elapsed | Queue: {} | Active Tasks: {} | Semaphore Permits: {}",
-                elapsed_crawl, queue_size, active_count, permits
-            );
-            info!("{}", log_msg);
-            last_log_time = Instant::now();
-        }
-
-        while let Some((url, depth)) = urls_to_process.pop_front() {
-            if depth > crawl_depth {
-                debug!("Skipping URL due to max depth ({} > {}): {}", depth, crawl_depth, url);
-                continue;
-            }
-
-            processed_count += 1;
-            let client = state.client.clone();
-            let semaphore = state.semaphore.clone();
-            let logs_clone = logs.clone();
-
-            active_tasks.push(tokio::spawn(async move {
-                let (filename_option, extracted_urls) = process_url(
-                    &client,
-                    &semaphore,
-                    url.clone(),
-                    &logs_clone
-                ).await;
-                (url, depth, filename_option, extracted_urls)
-            }));
-        }
-
-        if !active_tasks.is_empty() {
-            let (result, _index, remaining_tasks) = select_all(active_tasks).await;
-            active_tasks = remaining_tasks;
-
-            match result {
-                Ok((original_url, current_depth, filename_option, extracted_urls)) => {
-                    if let Some(filename) = filename_option {
-                         match fs::read_to_string(&filename) {
-                             Ok(content) => {
-                                 mdx_results.push((original_url.clone(), content));
-                              },
-                             Err(e) => {
-                                 error!("Failed to read saved MDX file {}: {}", filename, e);
-                                 logs.lock().await.push(format!("Failed to read saved MDX file {}: {}", filename, e));
-                              }
-                         }
-                    }
-
-                     if current_depth < crawl_depth {
-                         for next_url_str in extracted_urls {
-                             if let Ok(next_url) = Url::parse(&next_url_str) {
-                                if let Some(domain) = next_url.domain() {
-                                    if target_domains.contains(domain) {
-                                        let next_url_string = next_url.to_string();
-                                        if visited_urls.insert(next_url_string.clone()) {
-                                            urls_to_process.push_back((next_url_string, current_depth + 1));
-                                        }
-                                    }
-                                }
-                             }
-                         }
+            _ => {
+                let msg = "[API KEY] No API key in request body, checking environment/'.env'...".to_string();
+                sse_log_info(&tx_clone, msg).await;
+                let key_from_env = get_api_key(); // Doesn't log internally anymore
+                if key_from_env == "fc-your-key" {
+                    let warn_msg = "⚠️ [API KEY WARNING] No valid Firecrawl API key found. Using default placeholder.";
+                    sse_log_warn(&tx_clone, warn_msg.to_string()).await;
+                } else {
+                    let env_msg = "[API KEY] Using API key found in environment/'.env'.";
+                    sse_log_info(&tx_clone, env_msg.to_string()).await;
+                     // Optionally log masked key here if needed
+                     if key_from_env.len() >= 10 {
+                         let masked_key = format!("{}...{}", &key_from_env[0..5], &key_from_env[key_from_env.len()-5..]);
+                         sse_log_info(&tx_clone, format!("[ENV] Using Firecrawl API key: {}", masked_key)).await;
+                     } else {
+                         sse_log_info(&tx_clone, "[ENV] Using Firecrawl API key (short key)".to_string()).await;
                      }
                 }
-                Err(e) => {
-                    error!("A crawl task failed (panicked): {:?}", e);
-                    logs.lock().await.push(format!("A crawl task failed (panicked): {:?}", e));
+                key_from_env
+            }
+        };
+
+        if api_key == "fc-your-key" {
+            let err_msg = "❌ Configuration Error: Firecrawl API key is missing or invalid.";
+            sse_log_error(&tx_clone, err_msg.to_string()).await;
+            let error_json = json!({ "error": err_msg });
+            let _ = tx_clone.send(Ok(Event::Data(Data::new(error_json.to_string()).event("error")))).await;
+            // Close the stream implicitly by dropping tx_clone
+            return;
+        }
+
+        // --- Parameter Validation & Logging ---
+        let max_urls = req_clone.max_urls.unwrap_or(20).clamp(5, 120);
+        let firecrawl_depth = req_clone.max_depth.unwrap_or(1).clamp(1, 5);
+        let crawl_depth = req_clone.crawl_depth.unwrap_or(2).clamp(0, 5); // Allow 0 depth? Let's assume min 1. clamp(1, 5)
+        let time_limit_secs = req_clone.time_limit.unwrap_or(600).clamp(150, 600); // Default 600s
+
+        // Log if parameters were clamped
+        if req_clone.max_urls.is_some() && req_clone.max_urls.unwrap() != max_urls {
+            sse_log_warn(&tx_clone, format!("[PARAM WARNING] Requested max_urls {} clamped to {}", req_clone.max_urls.unwrap(), max_urls)).await;
+        }
+        if req_clone.max_depth.is_some() && req_clone.max_depth.unwrap() != firecrawl_depth {
+            sse_log_warn(&tx_clone, format!("[PARAM WARNING] Requested firecrawl_depth {} clamped to {}", req_clone.max_depth.unwrap(), firecrawl_depth)).await;
+        }
+        if req_clone.crawl_depth.is_some() && req_clone.crawl_depth.unwrap() != crawl_depth {
+             sse_log_warn(&tx_clone, format!("[PARAM WARNING] Requested crawl_depth {} clamped to {}", req_clone.crawl_depth.unwrap(), crawl_depth)).await;
+        }
+        if req_clone.time_limit.is_some() && req_clone.time_limit.unwrap() != time_limit_secs {
+             sse_log_warn(&tx_clone, format!("[PARAM WARNING] Requested time_limit {} clamped to {}", req_clone.time_limit.unwrap(), time_limit_secs)).await;
+        }
+
+        let timeout_duration = Duration::from_secs(time_limit_secs as u64);
+
+        let params_log = format!("[VALIDATED PARAMS] Query: {}, MaxUrls: {}, FirecrawlDepth: {}, CrawlDepth: {}, TimeLimit: {}",
+             req_clone.query, max_urls, firecrawl_depth, crawl_depth, time_limit_secs);
+        sse_log_info(&tx_clone, params_log).await;
+
+
+        // --- Firecrawl Deep Research ---
+        let firecrawl_start_time = Instant::now();
+        let deep_research_result = fetch_deep_research_urls(
+            &client, &req_clone.query, max_urls, time_limit_secs, firecrawl_depth, &api_key, &tx_clone,
+        ).await;
+        let firecrawl_elapsed = firecrawl_start_time.elapsed();
+        sse_log_info(&tx_clone, format!("[FIRECRAWL TIMING] ⏱️ Firecrawl API took {:.2}s", firecrawl_elapsed.as_secs_f64())).await;
+
+        let initial_urls = match deep_research_result {
+            Ok(urls) => {
+                sse_log_info(&tx_clone, format!("✅ Retrieved {} URLs from Deep Research API", urls.len())).await;
+                urls
+            },
+            Err(e) => {
+                // fetch_deep_research_urls already logs the specific error via SSE
+                let err_msg = format!("❌ Failed to fetch URLs from Firecrawl: {}", e);
+                // sse_log_error(&tx_clone, err_msg.clone()).await; // Avoid double logging
+                let error_json = json!({ "error": err_msg });
+                let _ = tx_clone.send(Ok(Event::Data(Data::new(error_json.to_string()).event("error")))).await;
+                return;
+            }
+        };
+
+        if initial_urls.is_empty() {
+            let msg = "⚠️ No URLs found from Deep Research API. Nothing more to process.";
+            sse_log_warn(&tx_clone, msg.to_string()).await;
+             let completion_json = json!({
+                 "message": msg,
+                 "processed_mdx_url_count": 0,
+                 "initial_urls_from_firecrawl": initial_urls, // Empty vec
+                 "mdx_files": [], // Empty vec
+                 "timings": {
+                     "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
+                     "total_seconds": overall_start_time.elapsed().as_secs_f64()
+                 },
+                 // Include params for context
+                 "params": {
+                    "query": req_clone.query,
+                    "requested_max_urls": req_clone.max_urls,
+                    "used_max_urls": max_urls,
+                    "requested_firecrawl_depth": req_clone.max_depth,
+                    "used_firecrawl_depth": firecrawl_depth,
+                    "requested_crawl_depth": req_clone.crawl_depth,
+                    "used_crawl_depth": crawl_depth,
+                    "requested_time_limit": req_clone.time_limit,
+                    "used_time_limit": time_limit_secs,
+                }
+             });
+             let _ = tx_clone.send(Ok(Event::Data(Data::new(completion_json.to_string()).event("completion")))).await;
+            return;
+        }
+
+        // --- MDX Crawling ---
+        sse_log_info(&tx_clone, format!("[MDX CRAWL START] Starting MDX crawl for {} initial URLs up to depth {}", initial_urls.len(), crawl_depth)).await;
+        let mdx_crawler_start_time = Instant::now();
+
+        let mut visited_urls = HashSet::<String>::new();
+        let mut urls_to_process = VecDeque::<(String, usize)>::new();
+        let mut mdx_results = Vec::<(String, String)>::new();
+        let mut processed_count = 0;
+
+        let target_domains = initial_urls.iter()
+            .filter_map(|url_str| Url::parse(url_str).ok()?.domain().map(|s| s.to_string()))
+            .collect::<HashSet<String>>();
+        sse_log_info(&tx_clone, format!("[MDX CRAWL SCOPE] Allowed domains: {:?}", target_domains)).await;
+
+        for url_str in &initial_urls {
+            if let Ok(parsed_url) = Url::parse(url_str) {
+                let url_string = parsed_url.to_string();
+                 if visited_urls.insert(url_string.clone()) {
+                     urls_to_process.push_back((url_string, 0));
+                     sse_log_info(&tx_clone, format!("Queueing initial MDX crawl URL: {}", url_str)).await;
+                 }
+            } else {
+                let warn_msg = format!("Ignoring invalid initial URL from Firecrawl: {}", url_str);
+                 sse_log_warn(&tx_clone, warn_msg).await;
+            }
+        }
+
+        let mut active_tasks = Vec::new();
+        let crawl_loop_start_time = Instant::now();
+        let mut last_log_time = Instant::now();
+        let max_active_tasks = semaphore.available_permits().min(100); // Limit concurrent tasks
+
+        while !urls_to_process.is_empty() || !active_tasks.is_empty() {
+             // Check overall timeout
+             if overall_start_time.elapsed() > timeout_duration {
+                  let timeout_msg = format!("Overall process timed out after {:.2}s during MDX crawl phase", overall_start_time.elapsed().as_secs_f64());
+                  sse_log_warn(&tx_clone, timeout_msg).await;
+                  break; // Exit the loop on timeout
+             }
+
+            // Periodic status update
+            if last_log_time.elapsed() > Duration::from_secs(10) {
+                let queue_size = urls_to_process.len();
+                let active_count = active_tasks.len();
+                let permits = semaphore.available_permits();
+                let elapsed_crawl = crawl_loop_start_time.elapsed().as_secs_f32();
+                let log_msg = format!(
+                    "[MDX CRAWL STATUS] {:.1}s elapsed | Queue: {} | Active Tasks: {} | Semaphore Permits: {}",
+                    elapsed_crawl, queue_size, active_count, permits
+                );
+                sse_log_info(&tx_clone, log_msg).await;
+                last_log_time = Instant::now();
+            }
+
+            // Launch new tasks if slots available and URLs exist
+            while active_tasks.len() < max_active_tasks && !urls_to_process.is_empty() {
+                if let Some((url, depth)) = urls_to_process.pop_front() {
+                    if depth > crawl_depth {
+                        let skip_msg = format!("Skipping URL due to max depth ({} > {}): {}", depth, crawl_depth, url);
+                        debug!("{}", skip_msg); // Keep debug for server logs, don't flood client
+                        // sse_log_info(&tx_clone, skip_msg).await; // Optional: log skips to client too
+                        continue;
+                    }
+
+                    processed_count += 1;
+                    let task_client = client.clone();
+                    let task_semaphore = semaphore.clone();
+                    let task_tx = tx_clone.clone(); // Clone sender for the task
+
+                    active_tasks.push(spawn(async move {
+                        let (filename_option, extracted_urls) = process_url(
+                            &task_client,
+                            &task_semaphore,
+                            url.clone(),
+                            &task_tx // Pass SSE sender
+                        ).await;
+                        (url, depth, filename_option, extracted_urls)
+                    }));
+                } else {
+                     break; // No more URLs to queue right now
                 }
             }
-        } else {
-            tokio::time::sleep(Duration::from_millis(10)).await;
-        }
-    }
 
-    let mdx_crawler_elapsed = mdx_crawler_start_time.elapsed();
-    let overall_elapsed = overall_start_time.elapsed();
+            // Process completed tasks
+            if !active_tasks.is_empty() {
+                let (result, _index, remaining_tasks) = select_all(active_tasks).await;
+                active_tasks = remaining_tasks;
 
-    logs.lock().await.push(format!(
-        "[MDX CRAWL TIMING] ⏱️ MDX crawl phase took {:.2}s, processed {} URLs.",
-        mdx_crawler_elapsed.as_secs_f64(), processed_count
-    ));
-     logs.lock().await.push(format!("[TOTAL TIMING] ⏱️ Total processing time: {:.2}s", overall_elapsed.as_secs_f64()));
-     logs.lock().await.push(format!("[RESULTS] Collected {} MDX files.", mdx_results.len()));
+                match result {
+                    Ok((original_url, current_depth, filename_option, extracted_urls)) => {
+                         if let Some(filename) = filename_option {
+                             // Attempt to read the saved file to include content in the final result
+                             match fs::read_to_string(&filename) {
+                                 Ok(content) => {
+                                     if !content.trim().is_empty() {
+                                         mdx_results.push((original_url.clone(), content));
+                                     } else {
+                                         sse_log_warn(&tx_clone, format!("Read MDX file {} but content was empty for {}", filename, original_url)).await;
+                                     }
+                                  },
+                                 Err(e) => {
+                                     let err_msg = format!("Failed to read saved MDX file {} for {}: {}", filename, original_url, e);
+                                     sse_log_error(&tx_clone, err_msg).await;
+                                  }
+                             }
+                         }
 
-    let final_logs = logs.lock().await.clone();
-
-    let timings = json!({
-        "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
-        "mdx_crawler_seconds": mdx_crawler_elapsed.as_secs_f64(),
-        "total_seconds": overall_elapsed.as_secs_f64(),
-        "params": {
-             "query": req.query,
-             "requested_max_urls": req.max_urls,
-             "used_max_urls": max_urls,
-             "requested_firecrawl_depth": req.max_depth,
-             "used_firecrawl_depth": firecrawl_depth,
-             "requested_crawl_depth": req.crawl_depth,
-             "used_crawl_depth": crawl_depth,
-             "requested_time_limit": req.time_limit,
-             "used_time_limit": time_limit_secs,
-        }
-    });
-
-    let response_message = format!(
-        "Completed SuperCrawl. Processed {} URLs for MDX in {:.2}s. Collected {} MDX files.",
-        processed_count,
-        mdx_crawler_elapsed.as_secs_f64(),
-        mdx_results.len()
-    );
-
-    let response = json!({
-        "message": response_message,
-        "processed_mdx_url_count": processed_count,
-        "initial_urls_from_firecrawl": initial_urls,
-        "mdx_files": mdx_results,
-        "timings": timings,
-        "logs": final_logs
-    });
-
-    info!("[RESPONSE] {}", response_message);
-    HttpResponse::Ok().json(response)
-}
-
-pub async fn background_crawler(
-    client: Client,
-    semaphore: Arc<Semaphore>,
-    tx: mpsc::Sender<(String, usize, usize, String)>,
-    mut rx: mpsc::Receiver<(String, usize, usize, String)>,
-    logs: Arc<tokio::sync::Mutex<Vec<String>>>,
-) {
-    info!("🚀 Starting background crawler task");
-    let mut visited = HashSet::<String>::new();
-    while let Some((url, depth, max_depth, domain)) = rx.recv().await {
-        if !visited.insert(url.clone()) {
-            debug!("Background task skipping already visited: {}", url);
-            continue;
-        }
-        info!("Background task processing: {} (Depth {}/{})", url, depth, max_depth);
-
-        let (_filename_option, extracted_urls) = process_url(
-            &client,
-            &semaphore,
-            url.clone(),
-            &logs,
-        ).await;
-
-        if depth < max_depth {
-            debug!("Background task found {} URLs from {} at depth {}", extracted_urls.len(), url, depth);
-            if let Ok(base_url_parsed) = Url::parse(&url) {
-                if let Some(base_domain) = base_url_parsed.domain() {
-                    for next_url_str in extracted_urls {
-                         if let Ok(next_url) = Url::parse(&next_url_str) {
-                            if let Some(next_domain) = next_url.domain() {
-                                if next_domain == base_domain || next_domain.ends_with(&format!(".{}", base_domain)) {
-                                    let _ = tx.send((next_url_str, depth + 1, max_depth, domain.clone())).await;
-                                }
-                            }
+                         // Queue newly found URLs if depth allows
+                         if current_depth < crawl_depth {
+                             let mut queued_count = 0;
+                             for next_url_str in extracted_urls {
+                                 if let Ok(next_url) = Url::parse(&next_url_str) {
+                                     if let Some(domain) = next_url.domain() {
+                                        // Check if the domain is one of the initial target domains
+                                        if target_domains.contains(domain) {
+                                            let next_url_string = next_url.to_string();
+                                             if visited_urls.insert(next_url_string.clone()) {
+                                                 urls_to_process.push_back((next_url_string, current_depth + 1));
+                                                 queued_count += 1;
+                                             }
+                                         }
+                                     }
+                                 }
+                             }
+                              if queued_count > 0 {
+                                 debug!("Queued {} new URLs from {}", queued_count, original_url); // Server log only
+                             }
                          }
                     }
+                    Err(e) => {
+                        // Task panicked
+                        let panic_msg = format!("A crawl task failed (panicked): {:?}", e);
+                        sse_log_error(&tx_clone, panic_msg).await;
+                    }
                 }
+            } else {
+                 // No active tasks, wait briefly if queue still has items
+                 if !urls_to_process.is_empty() {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                 }
             }
-        } else {
-            debug!("Background task reached max depth for {}", url);
+             tokio::task::yield_now().await; // Yield to allow other tasks/IO
+        } // End of while loop
+
+        // --- Finalization ---
+        let mdx_crawler_elapsed = mdx_crawler_start_time.elapsed();
+        let overall_elapsed = overall_start_time.elapsed();
+
+        sse_log_info(&tx_clone, format!(
+            "[MDX CRAWL TIMING] ⏱️ MDX crawl phase took {:.2}s, processed {} URLs.",
+            mdx_crawler_elapsed.as_secs_f64(), processed_count
+        )).await;
+         sse_log_info(&tx_clone, format!("[TOTAL TIMING] ⏱️ Total processing time: {:.2}s", overall_elapsed.as_secs_f64())).await;
+         sse_log_info(&tx_clone, format!("[RESULTS] Collected {} MDX files.", mdx_results.len())).await;
+
+        // Prepare final JSON data for the completion event
+        let timings = json!({
+            "firecrawl_api_seconds": firecrawl_elapsed.as_secs_f64(),
+            "mdx_crawler_seconds": mdx_crawler_elapsed.as_secs_f64(),
+            "total_seconds": overall_elapsed.as_secs_f64(),
+        });
+
+        let params_summary = json!({
+             "query": req_clone.query,
+             "requested_max_urls": req_clone.max_urls,
+             "used_max_urls": max_urls,
+             "requested_firecrawl_depth": req_clone.max_depth,
+             "used_firecrawl_depth": firecrawl_depth,
+             "requested_crawl_depth": req_clone.crawl_depth,
+             "used_crawl_depth": crawl_depth,
+             "requested_time_limit": req_clone.time_limit,
+             "used_time_limit": time_limit_secs,
+        });
+
+        let response_message = format!(
+            "Completed SuperCrawl. Processed {} URLs for MDX in {:.2}s. Collected {} MDX files.",
+            processed_count,
+            mdx_crawler_elapsed.as_secs_f64(),
+            mdx_results.len()
+        );
+
+        let final_data = json!({
+            "message": response_message,
+            "processed_mdx_url_count": processed_count,
+            "initial_urls_from_firecrawl": initial_urls,
+            "mdx_files": mdx_results, // Include collected MDX content
+            "timings": timings,
+            "params": params_summary,
+            // Logs are streamed, not included here
+        });
+
+        // Send the final completion event
+        let completion_event = Event::Data(Data::new(final_data.to_string()).event("completion"));
+        if tx_clone.send(Ok(completion_event)).await.is_err() {
+             warn!("Failed to send final completion event to client.");
         }
-    }
-     info!("Background worker task finished receiving.");
-}
 
-async fn start_crawl(_req: web::Json<CrawlRequest>, _state: web::Data<CrawlerState>) -> impl Responder {
-    HttpResponse::Ok().json(json!({
-        "message": "This endpoint is deprecated. Use /supercrawler.",
-        "logs": ["Redirecting to /supercrawler functionality internally is not implemented."]
-    }))
-}
+        sse_log_info(&tx_clone, "[REQUEST END] ✅ SuperCrawl task finished.".to_string()).await;
+        // Dropping tx_clone here will close the stream for the client
+    });
 
-async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<CrawlerState>) -> impl Responder {
-    let (domain, path_param) = path.into_inner();
-    let filename = format!("./output/{}/{}.mdx", domain, path_param);
-    match fs::read_to_string(&filename) {
-        Ok(content) => HttpResponse::Ok()
-            .content_type("text/markdown; charset=utf-8")
-            .body(content),
-        Err(e) => {
-             warn!("MDX file not found for get_mdx: {} ({})", filename, e);
-             HttpResponse::NotFound().body(format!("MDX not found for {}/{}", domain, path_param))
-         }
-    }
+    // Return the SSE stream based on the receiver
+    let stream = ReceiverStream::new(rx);
+    Ok(Sse::from_stream(stream).with_keep_alive(Duration::from_secs(15)))
 }

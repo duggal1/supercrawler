@@ -29,7 +29,6 @@ use crate::yt_crawler::scrape_youtube_sse;
 mod supercrawler;
 use crate::supercrawler::{
     AppState as SuperCrawlerState,
-    background_crawler as super_background_crawler,
     super_crawl
 };
 
@@ -1013,8 +1012,8 @@ async fn main() -> std::io::Result<()> {
     info!("Initializing Crawler API with SuperCrawler and YouTube endpoints");
 
     let max_concurrency = 500;
-    let request_timeout_secs = 30;
-    let connect_timeout_secs = 20;
+    let request_timeout_secs = 60;
+    let connect_timeout_secs = 30;
 
     info!("Configuration: Max Concurrency={}, Request Timeout={}s, Connect Timeout={}s",
           max_concurrency, request_timeout_secs, connect_timeout_secs);
@@ -1050,33 +1049,22 @@ async fn main() -> std::io::Result<()> {
         .timeout(Duration::from_secs(request_timeout_secs))
         .connect_timeout(Duration::from_secs(connect_timeout_secs))
         .pool_idle_timeout(Duration::from_secs(120))
-        .user_agent("SuperCrawler/1.5")
+        .user_agent("SuperCrawler/1.6-SSE")
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()
         .expect("Failed to build reqwest client");
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
-    let logs = Arc::new(Mutex::new(Vec::new()));
-
-    let (bg_tx, bg_rx) = tokio::sync::mpsc::channel::<(String, usize, usize, String)>(50_000);
-    let bg_client = client.clone();
-    let bg_semaphore = semaphore.clone();
-    let bg_logs = logs.clone();
-    tokio::spawn(super_background_crawler(
-        bg_client, bg_semaphore, bg_tx.clone(), bg_rx, bg_logs
-    ));
-
+    let old_crawl_logs = Arc::new(Mutex::new(Vec::new()));
     let regular_state = web::Data::new(CrawlerState {
         client: client.clone(),
         semaphore: semaphore.clone(),
-        logs: logs.clone(),
+        logs: old_crawl_logs,
     });
 
     let super_state = web::Data::new(SuperCrawlerState {
-        client,
-        semaphore,
-        tx: bg_tx,
-        logs,
+        client: client.clone(),
+        semaphore: semaphore.clone(),
     });
 
     let youtube_api_key = match std::env::var("YOUTUBE_API_KEY") {
@@ -1113,3 +1101,4 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
+
