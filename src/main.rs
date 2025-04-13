@@ -1,7 +1,7 @@
 use actix_web::{web, App, HttpServer, HttpResponse, Responder, rt::spawn};
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
-use tokio::sync::{mpsc, Semaphore, Mutex};
+use tokio::sync::{Semaphore, Mutex, mpsc};
 use reqwest::Client;
 use scraper::{Html, Selector, ElementRef};
 use url::Url;
@@ -16,12 +16,15 @@ use log::{info, error, warn, debug};
 use std::time::{Duration, Instant};
 use actix_cors::Cors;
 use dotenv::dotenv;
-use futures::future::select_all;
+use futures_util::{future::select_all, stream::StreamExt};
 use serde_json::json;
 use actix_web_lab::sse::{self, Sse, Event};
 use std::convert::Infallible;
 use tokio_stream::wrappers::ReceiverStream;
-use futures::StreamExt;
+use std::io::Error as IoError;
+
+mod yt_crawler;
+use crate::yt_crawler::scrape_youtube_sse;
 
 mod supercrawler;
 use crate::supercrawler::{
@@ -47,7 +50,34 @@ struct CrawlerState {
     client: Client,
     semaphore: Arc<Semaphore>,
     logs: Arc<Mutex<Vec<String>>>,
-    bg_tx: mpsc::Sender<(String, usize, usize, String)>,
+}
+
+/// Handles the YouTube crawl request: streams logs via SSE.
+async fn yt_crawl_handler(
+    query: web::Query<yt_crawler::ScrapeParams>,
+    api_key_data: web::Data<String>,
+) -> Result<actix_web_lab::sse::Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, actix_web::Error> {
+    let api_key_arc = api_key_data.into_inner(); // This is Arc<String>
+
+    if api_key_arc.is_empty() {
+        error!("YOUTUBE_API_KEY from state is empty.");
+        return Err(actix_web::error::ErrorInternalServerError("API key from state is empty"));
+    }
+
+    let params = query.into_inner();
+    info!("Received YouTube crawl request: {:?}", params);
+
+    let (tx, rx) = mpsc::channel(100);
+
+    // Clone Arcs for the spawned task
+    let api_key_for_task = api_key_arc.clone();
+    spawn(scrape_youtube_sse(params, api_key_for_task, tx));
+
+    let stream = ReceiverStream::new(rx)
+        .map(|event| Ok::<_, Infallible>(event));
+
+    Ok(Sse::from_stream(stream)
+        .with_keep_alive(Duration::from_secs(15)))
 }
 
 /// Converts an HTML element's inline content to Markdown syntax, handling nesting.
@@ -612,27 +642,27 @@ async fn fetch_pdf(client: &Client, url: &str) -> Option<String> {
 }
 
 /// Processes a single URL: fetches, cleans, saves MDX. Returns Option<filename> and Vec<extracted_urls>.
-/// Now also sends logs through the provided channel.
-async fn process_url(
+/// Now also sends logs through the provided SSE sender.
+async fn process_url_sse(
     client: &Client,
     semaphore: &Arc<Semaphore>,
     url: String,
     logs: &Arc<Mutex<Vec<String>>>,
-    log_tx: &mpsc::Sender<String>,
+    tx: &mpsc::Sender<sse::Event>,
 ) -> (Option<String>, Vec<String>) {
     let _permit = match semaphore.acquire().await {
         Ok(permit) => permit,
         Err(e) => {
             let err_msg = format!("Failed to acquire semaphore permit for {}: {}", url, e);
             error!("{}", err_msg);
-            let _ = log_tx.send(err_msg).await;
+            let _ = tx.send(sse::Event::Data(sse::Data::new(err_msg))).await;
             return (None, Vec::new());
         }
     };
 
     let log_msg = format!("Processing: {}", url);
     info!("{}", log_msg);
-    let _ = log_tx.send(log_msg.clone()).await;
+    let _ = tx.send(sse::Event::Data(sse::Data::new(log_msg.clone()))).await;
     logs.lock().await.push(log_msg);
 
     let resp = match client.get(&url).send().await {
@@ -640,8 +670,8 @@ async fn process_url(
         Err(e) => {
             let err_msg = format!("Request failed for {}: {}", url, e);
             error!("{}", err_msg);
-            logs.lock().await.push(err_msg.clone());
-            let _ = log_tx.send(err_msg).await;
+            let _ = tx.send(sse::Event::Data(sse::Data::new(err_msg.clone()))).await;
+            logs.lock().await.push(err_msg);
             return (None, Vec::new());
         }
     };
@@ -649,8 +679,8 @@ async fn process_url(
     if !resp.status().is_success() {
         let err_msg = format!("Request failed for {} with status: {}", url, resp.status());
         error!("{}", err_msg);
-        logs.lock().await.push(err_msg.clone());
-        let _ = log_tx.send(err_msg).await;
+        let _ = tx.send(sse::Event::Data(sse::Data::new(err_msg.clone()))).await;
+        logs.lock().await.push(err_msg);
         return (None, Vec::new());
     }
 
@@ -662,12 +692,13 @@ async fn process_url(
     let mut mdx_content: Option<String> = None;
     let mut extracted_urls: Vec<String> = Vec::new();
     let mut content_processed = false;
+    let client_ref = client;
 
     if content_type.contains("application/pdf") {
         let pdf_msg = format!("Fetching PDF content from {}", url);
         info!("{}", pdf_msg);
-        let _ = log_tx.send(pdf_msg).await;
-        if let Some(pdf_text) = fetch_pdf(client, &url).await {
+        let _ = tx.send(sse::Event::Data(sse::Data::new(pdf_msg))).await;
+        if let Some(pdf_text) = fetch_pdf(client_ref, &url).await {
             let pdf_mdx = format!(
                 "---\ntitle: \"PDF Document: {}\"\ndescription: \"Extracted text from PDF.\"\nsourceUrl: \"{}\"\n---\n\n{}",
                 url.split('/').last().unwrap_or("document.pdf"), url, pdf_text
@@ -677,31 +708,31 @@ async fn process_url(
         } else {
             let err_msg = format!("Failed to extract text from PDF: {}", url);
             error!("{}", err_msg);
-            logs.lock().await.push(err_msg.clone());
-            let _ = log_tx.send(err_msg).await;
+            let _ = tx.send(sse::Event::Data(sse::Data::new(err_msg.clone()))).await;
+            logs.lock().await.push(err_msg);
         }
     } else if content_type.contains("text/html") {
         let html_msg = format!("Fetching HTML content from {}", url);
         info!("{}", html_msg);
-        let _ = log_tx.send(html_msg).await;
+        let _ = tx.send(sse::Event::Data(sse::Data::new(html_msg))).await;
         match resp.text().await {
             Ok(html_content) => {
                 mdx_content = Some(clean_to_mdx(&html_content, &url));
-                extracted_urls = fetch_and_extract_urls(client, &url).await;
+                extracted_urls = fetch_and_extract_urls(client_ref, &url).await;
                 content_processed = true;
             }
             Err(e) => {
                 let err_msg = format!("Failed to read HTML text from response {}: {}", url, e);
                 error!("{}", err_msg);
-                logs.lock().await.push(err_msg.clone());
-                let _ = log_tx.send(err_msg).await;
+                let _ = tx.send(sse::Event::Data(sse::Data::new(err_msg.clone()))).await;
+                logs.lock().await.push(err_msg);
             }
         }
     } else {
         let skip_msg = format!("Skipping unsupported content type '{}' for URL: {}", content_type, url);
         info!("{}", skip_msg);
-        logs.lock().await.push(skip_msg.clone());
-        let _ = log_tx.send(skip_msg).await;
+        let _ = tx.send(sse::Event::Data(sse::Data::new(skip_msg.clone()))).await;
+        logs.lock().await.push(skip_msg);
     }
 
     let saved_filename = if let Some(mdx) = mdx_content {
@@ -710,8 +741,8 @@ async fn process_url(
         } else {
             let warn_msg = format!("Generated MDX was empty for URL: {}", url);
             warn!("{}", warn_msg);
-            logs.lock().await.push(warn_msg.clone());
-            let _ = log_tx.send(warn_msg).await;
+            let _ = tx.send(sse::Event::Data(sse::Data::new(warn_msg.clone()))).await;
+            logs.lock().await.push(warn_msg);
             None
         }
     } else {
@@ -721,38 +752,38 @@ async fn process_url(
     if saved_filename.is_some() {
         let success_msg = format!("Successfully processed and saved: {}", url);
         info!("{}", success_msg);
-        logs.lock().await.push(success_msg.clone());
-        let _ = log_tx.send(success_msg).await;
+        let _ = tx.send(sse::Event::Data(sse::Data::new(success_msg.clone()))).await;
+        logs.lock().await.push(success_msg);
     } else if content_processed {
         let fail_msg = format!("Content processed but failed to save MDX for: {}", url);
         warn!("{}", fail_msg);
-        logs.lock().await.push(fail_msg.clone());
-        let _ = log_tx.send(fail_msg).await;
+        let _ = tx.send(sse::Event::Data(sse::Data::new(fail_msg.clone()))).await;
+        logs.lock().await.push(fail_msg);
     }
 
     (saved_filename, extracted_urls)
 }
 
 /// Handles the crawl request: streams logs via SSE, collects results.
-async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState>) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
+async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState>) -> actix_web_lab::sse::Sse<impl futures::Stream<Item = Result<Event, IoError>>> {
     let initial_domains = req.domains.clone();
     let max_depth = req.max_depth.unwrap_or(5).min(5);
     let start_time = Instant::now();
-
     let logs = state.logs.clone();
 
-    let (log_tx, log_rx) = mpsc::channel::<String>(200);
+    let (tx, rx) = mpsc::channel(200);
 
     let start_msg = format!(
         "Received crawl request for {} domains with max_depth: {}. Streaming logs...",
         initial_domains.len(), max_depth
     );
     info!("{}", start_msg);
-    let _ = log_tx.send(start_msg.clone()).await;
+    let _ = tx.send(sse::Event::Data(sse::Data::new(start_msg.clone()))).await;
     logs.lock().await.push(start_msg);
 
     let client = state.client.clone();
     let semaphore = state.semaphore.clone();
+    let req_clone = req.into_inner();
 
     spawn(async move {
         let mut visited_urls = HashSet::<String>::new();
@@ -775,20 +806,26 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState
                     urls_to_process.push_back((url_string.clone(), 0));
                     let queue_msg = format!("Queueing initial URL: {}", url_string);
                     info!("{}", queue_msg);
-                    let _ = log_tx.send(queue_msg.clone()).await;
+                    let _ = tx.send(sse::Event::Data(sse::Data::new(queue_msg.clone()))).await;
                     crawl_logs.push(queue_msg);
+                } else {
+                    let warn_msg = format!("Ignoring invalid initial URL: {}", domain_url);
+                    warn!("{}", warn_msg);
+                    let _ = tx.send(sse::Event::Data(sse::Data::new(warn_msg.clone()))).await;
+                    crawl_logs.push(warn_msg.clone());
+                    logs.lock().await.push(warn_msg);
                 }
             } else {
                 let warn_msg = format!("Ignoring invalid initial URL: {}", domain_url);
                 warn!("{}", warn_msg);
-                logs.lock().await.push(warn_msg.clone());
+                let _ = tx.send(sse::Event::Data(sse::Data::new(warn_msg.clone()))).await;
                 crawl_logs.push(warn_msg.clone());
-                let _ = log_tx.send(warn_msg).await;
+                logs.lock().await.push(warn_msg);
             }
         }
 
         let mut active_tasks = Vec::new();
-        let max_active_tasks = semaphore.available_permits() * 2;
+        let max_active_tasks = semaphore.available_permits().min(100);
 
         while !urls_to_process.is_empty() || !active_tasks.is_empty() {
             while !urls_to_process.is_empty() && active_tasks.len() < max_active_tasks {
@@ -796,7 +833,7 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState
                     if depth > max_depth {
                         let skip_msg = format!("Skipping URL due to max depth ({} > {}): {}", depth, max_depth, url);
                         info!("{}", skip_msg);
-                        let _ = log_tx.send(skip_msg).await;
+                        let _ = tx.send(sse::Event::Data(sse::Data::new(skip_msg))).await;
                         continue;
                     }
 
@@ -804,15 +841,15 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState
                     let task_client = client.clone();
                     let task_semaphore = semaphore.clone();
                     let task_logs = logs.clone();
-                    let task_log_tx = log_tx.clone();
+                    let task_tx = tx.clone();
 
                     active_tasks.push(spawn(async move {
-                        let (filename_option, extracted_urls) = process_url(
+                        let (filename_option, extracted_urls) = process_url_sse(
                             &task_client,
                             &task_semaphore,
                             url.clone(),
                             &task_logs,
-                            &task_log_tx,
+                            &task_tx,
                         ).await;
                         (url, depth, filename_option, extracted_urls)
                     }));
@@ -843,23 +880,21 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState
                                 if !content.trim().is_empty() {
                                     let success_read_msg = format!("Successfully read MDX for {}", original_url);
                                     info!("{}", success_read_msg);
-                                    let _ = log_tx.send(success_read_msg).await;
                                     mdx_results.push((original_url.clone(), content));
                                 } else {
                                     let empty_read_msg = format!("Read MDX file {} but content was empty/whitespace for {}", filename, original_url);
                                     warn!("{}", empty_read_msg);
-                                    let _ = log_tx.send(empty_read_msg).await;
                                 }
                             }
                             Err(e) => {
                                 let err_read_msg = format!("Failed to read saved MDX file {} for {}: {}", filename, original_url, e);
                                 error!("{}", err_read_msg);
-                                logs.lock().await.push(err_read_msg.clone());
-                                let _ = log_tx.send(err_read_msg).await;
+                                let _ = tx.send(sse::Event::Data(sse::Data::new(err_read_msg.clone()))).await;
+                                logs.lock().await.push(err_read_msg);
                             }
                         }
                     } else {
-                        debug!("No filename returned from process_url for {}", original_url);
+                        debug!("No filename returned from process_url_sse for {}", original_url);
                     }
 
                     if current_depth < max_depth {
@@ -884,21 +919,19 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState
                             } else {
                                 let invalid_found_msg = format!("Ignoring invalid extracted URL: {}", next_url_str);
                                 warn!("{}", invalid_found_msg);
-                                let _ = log_tx.send(invalid_found_msg).await;
                             }
                         }
                         if queued_count > 0 {
                             let queue_batch_msg = format!("Queued {} new URLs from {} (depth {})", queued_count, original_url, current_depth);
                             info!("{}", queue_batch_msg);
-                            let _ = log_tx.send(queue_batch_msg).await;
                         }
                     }
                 }
                 Err(e) => {
                     let task_fail_msg = format!("A crawl task failed to complete: {:?}", e);
                     error!("{}", task_fail_msg);
-                    logs.lock().await.push(task_fail_msg.clone());
-                    let _ = log_tx.send(task_fail_msg).await;
+                    let _ = tx.send(sse::Event::Data(sse::Data::new(task_fail_msg.clone()))).await;
+                    logs.lock().await.push(task_fail_msg);
                 }
             }
             tokio::task::yield_now().await;
@@ -908,13 +941,13 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState
         let final_message = format!(
             "Crawl completed. Processed {} URLs for {} initial domains in {:.2} seconds. Found {} MDX files.",
             processed_count,
-            req.domains.len(),
+            req_clone.domains.len(),
             elapsed.as_secs_f64(),
             mdx_results.len()
         );
         info!("{}", final_message);
-        logs.lock().await.push(final_message.clone());
         crawl_logs.push(final_message.clone());
+        logs.lock().await.push(final_message.clone());
 
         let final_result = FinalCrawlResult {
             message: final_message,
@@ -927,24 +960,30 @@ async fn start_crawl(req: web::Json<CrawlRequest>, state: web::Data<CrawlerState
             Err(e) => {
                 let json_err_msg = format!("Failed to serialize final results: {}", e);
                 error!("{}", json_err_msg);
-                let _ = log_tx.send(format!("Error: {}", json_err_msg)).await;
+                let error_event = sse::Event::Data(
+                    sse::Data::new(json!({ "error": json_err_msg }).to_string())
+                        .event("error")
+                );
+                let _ = tx.send(error_event).await;
                 json!({ "error": json_err_msg }).to_string()
             }
         };
 
-        let sse_formatted_completion = format!("event: completion\ndata: {}\n\n", final_json);
-
-        if let Err(e) = log_tx.send(sse_formatted_completion).await {
+        let completion_event = sse::Event::Data(
+            sse::Data::new(final_json)
+                .event("completion")
+        );
+        if let Err(e) = tx.send(completion_event).await {
             error!("Failed to send final completion event to client: {}", e);
         }
 
-        info!("Crawl task finished for domains: {:?}", req.domains);
+        info!("Crawl task finished for domains: {:?}", req_clone.domains);
     });
 
-    Sse::from_stream(ReceiverStream::new(log_rx).map(|msg| {
-        Ok::<_, Infallible>(sse::Event::Data(sse::Data::new(msg)))
-    }))
-    .with_keep_alive(Duration::from_secs(15))
+    let stream = ReceiverStream::new(rx).map(|event| Ok::<_, IoError>(event));
+
+    Sse::from_stream(stream)
+        .with_keep_alive(Duration::from_secs(15))
 }
 
 /// Serves an MDX file based on domain and path.
@@ -971,7 +1010,7 @@ async fn main() -> std::io::Result<()> {
     let host = "0.0.0.0";
     let port = 8080;
 
-    info!("Initializing Crawler API with SuperCrawler endpoint");
+    info!("Initializing Crawler API with SuperCrawler and YouTube endpoints");
 
     let max_concurrency = 500;
     let request_timeout_secs = 30;
@@ -993,22 +1032,33 @@ async fn main() -> std::io::Result<()> {
         info!("FIRECRAWL_API_KEY not found in environment");
     }
 
+    if let Ok(api_key) = std::env::var("YOUTUBE_API_KEY") {
+        if api_key.len() >= 10 {
+            let masked_key = format!("{}...{}", &api_key[0..5], &api_key[api_key.len()-5..]);
+            info!("Found YOUTUBE_API_KEY in environment: {}", masked_key);
+        } else if !api_key.is_empty() {
+            info!("Found YOUTUBE_API_KEY in environment (short key)");
+        } else {
+            warn!("YOUTUBE_API_KEY is set but empty!");
+        }
+    } else {
+        warn!("YOUTUBE_API_KEY not found in environment");
+    }
+
     let client = Client::builder()
         .pool_max_idle_per_host(max_concurrency / 2)
         .timeout(Duration::from_secs(request_timeout_secs))
         .connect_timeout(Duration::from_secs(connect_timeout_secs))
         .pool_idle_timeout(Duration::from_secs(120))
-        .user_agent("SuperCrawler/1.3-SSE")
+        .user_agent("SuperCrawler/1.5")
         .redirect(reqwest::redirect::Policy::limited(10))
-        .https_only(true)
         .build()
         .expect("Failed to build reqwest client");
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
-
     let logs = Arc::new(Mutex::new(Vec::new()));
 
-    let (bg_tx, bg_rx) = mpsc::channel::<(String, usize, usize, String)>(50_000);
+    let (bg_tx, bg_rx) = tokio::sync::mpsc::channel::<(String, usize, usize, String)>(50_000);
     let bg_client = client.clone();
     let bg_semaphore = semaphore.clone();
     let bg_logs = logs.clone();
@@ -1020,7 +1070,6 @@ async fn main() -> std::io::Result<()> {
         client: client.clone(),
         semaphore: semaphore.clone(),
         logs: logs.clone(),
-        bg_tx: bg_tx.clone(),
     });
 
     let super_state = web::Data::new(SuperCrawlerState {
@@ -1029,6 +1078,18 @@ async fn main() -> std::io::Result<()> {
         tx: bg_tx,
         logs,
     });
+
+    let youtube_api_key = match std::env::var("YOUTUBE_API_KEY") {
+        Ok(key) if !key.is_empty() => {
+            info!("Loaded YOUTUBE_API_KEY from environment.");
+            key
+        }
+        _ => {
+            error!("YOUTUBE_API_KEY not set or empty in environment. YouTube crawler endpoint will fail.");
+            String::new()
+        }
+    };
+    let youtube_api_key_data = web::Data::new(youtube_api_key);
 
     info!("Starting server at http://{}:{}", host, port);
     HttpServer::new(move || {
@@ -1042,8 +1103,10 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(regular_state.clone())
             .app_data(super_state.clone())
+            .app_data(youtube_api_key_data.clone())
             .route("/crawl", web::post().to(start_crawl))
             .route("/supercrawler", web::post().to(super_crawl))
+            .route("/yt-crawler", web::get().to(yt_crawl_handler))
             .route("/mdx/{domain}/{path:.*}", web::get().to(get_mdx))
     })
     .bind((host, port))?
