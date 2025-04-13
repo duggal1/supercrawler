@@ -829,7 +829,7 @@ async fn get_mdx(path: web::Path<(String, String)>, _state: web::Data<CrawlerSta
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
-    let host = "127.0.0.1";
+    let host = "0.0.0.0";
     let port = 8080;
 
     info!("Initializing Crawler API with SuperCrawler endpoint");
